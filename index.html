@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca de Filmes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #15110d;
+            --surface-color: #201a14;
+            --line-color: #342a20;
+            --text-main: #efe6d8;
+            --text-sec: #9c8f7d;
+            --gold: #d1a954;
+            --wood: #4a3623;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-top: 240px; 
+        }
+        h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 700; }
+        
+        header {
+            position: fixed; top: 0; left: 0; right: 0;
+            background-color: rgba(21, 17, 13, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid var(--line-color);
+            padding: 16px 24px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .header-top h1 { font-size: 1.8rem; color: var(--gold); }
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        
+        input[type="text"], input[type="password"] {
+            background: var(--surface-color); border: 1px solid var(--line-color);
+            color: var(--text-main); padding: 8px 12px; border-radius: 4px; outline: none;
+        }
+        input[type="text"]:focus, input[type="password"]:focus { border-color: var(--gold); }
+        
+        button {
+            background: var(--surface-color); color: var(--text-main);
+            border: 1px solid var(--line-color); padding: 8px 12px;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        button:hover { background: var(--line-color); }
+        button.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
+        button.primary:hover { background: #e2c073; }
+
+        .filters-container { display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto; padding-right: 8px;}
+        .filters-container::-webkit-scrollbar { width: 6px; }
+        .filters-container::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 3px; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .chip {
+            background: var(--surface-color); border: 1px solid var(--line-color);
+            padding: 4px 12px; border-radius: 16px; font-size: 0.85rem;
+            cursor: pointer; user-select: none; transition: background 0.2s;
+        }
+        .chip:hover { background: var(--line-color); }
+        .chip.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        .chip-count { opacity: 0.7; margin-left: 4px; font-size: 0.9em; }
+
+        main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+        .decade-section { margin-bottom: 56px; content-visibility: auto; contain-intrinsic-size: 800px; }
+        .decade-title {
+            font-size: 2rem; border-bottom: 2px solid var(--line-color);
+            padding-bottom: 8px; margin-bottom: 24px; display: flex; align-items: baseline; gap: 12px;
+        }
+        .decade-count { font-size: 1rem; color: var(--text-sec); font-family: system-ui, sans-serif; font-weight: normal; }
+        .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 28px 20px; }
+
+        .movie-card { position: relative; cursor: pointer; outline: none; border-radius: 4px; display: block; }
+        .movie-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+        .poster-wrapper {
+            position: relative; width: 100%; aspect-ratio: 2 / 3;
+            background: var(--surface-color); border-radius: 4px;
+            box-shadow: 0 5px 0 var(--wood), 0 8px 10px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease; overflow: hidden;
+        }
+        .movie-card:hover .poster-wrapper, .movie-card:focus-visible .poster-wrapper { transform: translateY(-8px); }
+        .poster-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .no-poster { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; color: var(--text-sec); font-size: 0.9rem; }
+
+        .poster-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(21,17,13,0.98) 0%, rgba(21,17,13,0.6) 50%, transparent 100%);
+            opacity: 0; transition: opacity 0.3s;
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 12px;
+        }
+        .movie-card:hover .poster-overlay, .movie-card:focus-visible .poster-overlay { opacity: 1; }
+        .overlay-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; text-shadow: 1px 1px 2px #000; line-height: 1.2; }
+        .overlay-year { font-size: 0.8rem; color: var(--gold); margin-bottom: 4px; }
+        .overlay-stream { font-size: 0.75rem; color: var(--text-sec); line-height: 1.3; }
+
+        dialog {
+            margin: auto; max-width: 900px; width: 90%; background: var(--bg-color); color: var(--text-main);
+            border: 1px solid var(--line-color); border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            padding: 0; overflow: hidden;
+        }
+        dialog::backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+        .modal-content { position: relative; display: flex; min-height: 450px; }
+        .modal-bg {
+            position: absolute; inset: 0; z-index: 0; opacity: 0.25;
+            background-size: cover; background-position: center top;
+            mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+            filter: blur(6px);
+        }
+        .modal-inner { position: relative; z-index: 1; display: flex; gap: 32px; padding: 40px; width: 100%; flex-wrap: wrap; }
+        .modal-poster { flex-shrink: 0; width: 280px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); aspect-ratio: 2/3; object-fit: cover;}
+        .modal-info { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+        .modal-title { font-size: 2.5rem; color: var(--gold); line-height: 1.1; margin-bottom: 4px; }
+        .modal-meta { color: var(--text-sec); font-size: 0.95rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
+        .modal-meta span::after { content: "·"; margin-left: 8px; }
+        .modal-meta span:last-child::after { content: ""; }
+        .modal-synopsis { margin-top: 12px; font-size: 1rem; line-height: 1.6; }
+        .modal-credits { margin-top: 16px; font-size: 0.95rem; color: var(--text-sec); line-height: 1.5;}
+        .modal-credits strong { color: var(--text-main); }
+        .stream-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+        .stream-tag { background: rgba(209, 169, 84, 0.1); color: var(--gold); border: 1px solid var(--gold); padding: 6px 14px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;}
+        .stream-none { color: var(--text-sec); border: 1px solid var(--line-color); padding: 6px 14px; border-radius: 4px; font-size: 0.85rem;}
+        
+        .modal-actions { margin-top: auto; padding-top: 24px; display: flex; gap: 12px; }
+        .close-btn {
+            position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.6);
+            border: 1px solid var(--line-color); color: white; width: 36px; height: 36px;
+            border-radius: 50%; cursor: pointer; z-index: 10; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .close-btn:hover { background: var(--gold); color: black; }
+
+        #sync-progress { display: none; width: 100%; height: 4px; background: var(--surface-color); position: fixed; top: 0; left: 0; z-index: 200; }
+        #sync-bar { width: 0%; height: 100%; background: var(--gold); transition: width 0.2s; }
+        
+        footer { text-align: center; padding: 40px 24px; color: var(--text-sec); font-size: 0.85rem; border-top: 1px solid var(--line-color); margin-top: 40px; }
+
+        @media (max-width: 768px) {
+            body { padding-top: 320px; }
+            .modal-inner { flex-direction: column; align-items: center; padding: 24px; }
+            .modal-info { text-align: center; align-items: center; }
+            .modal-meta { justify-content: center; }
+            .modal-poster { width: 200px; }
+            .modal-actions { justify-content: center; }
+        }
+        @media (prefers-reduced-motion) {
+            .poster-wrapper, .poster-overlay { transition: none; }
+            .movie-card:hover .poster-wrapper, .movie-card:focus-visible .poster-wrapper { transform: none; box-shadow: 0 0 0 2px var(--gold); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sync-progress"><div id="sync-bar"></div></div>
+
+    <header>
+        <div class="header-top">
+            <h1 class="serif">Biblioteca</h1>
+            <div class="controls">
+                <input type="text" id="search-input" placeholder="Buscar título..." onkeyup="handleSearch(event)">
+                <input type="password" id="api-key" placeholder="Chave API TMDB" title="Cole a chave v3 ou o Read Access Token">
+                <button onclick="saveKey()">Salvar Chave</button>
+                <button onclick="syncStreamings()">Sincronizar streamings</button>
+                <button onclick="clearCache()">Limpar dados</button>
+                <button class="primary" onclick="sortearFilme()">Sortear um filme</button>
+                <input type="file" id="csv-file" accept=".csv" onchange="handleFileUpload(event)" style="display: none;">
+                <button id="btn-upload" onclick="document.getElementById('csv-file').click()" style="display: none;">Carregar CSV manualmente</button>
+            </div>
+            <div id="sync-status" style="font-size: 0.8rem; color: var(--text-sec);"></div>
+        </div>
+        <div class="filters-container" id="filters"></div>
+    </header>
+
+    <main id="library"></main>
+
+    <footer>
+        Dados de filmes e séries: TMDB. Disponibilidade nos streamings: JustWatch (via TMDB). Este site não é afiliado nem endossado por eles.
+    </footer>
+
+    <dialog id="movie-modal">
+        <button class="close-btn" onclick="closeModal()">×</button>
+        <div class="modal-content" id="modal-content"></div>
+    </dialog>
+
+    <script>
+        const TMDB_BASE = 'https://api.themoviedb.org/3';
+        const RULES = {
+            exclude: ['Looke', 'MUBI', 'Oldflix', 'Belas Artes à la carte', 'Claro tv+'],
+            excludeSuffix: 'Amazon Channel',
+            rename: { 'Paramount Plus': 'Paramount+' }
+        };
+
+        let tmdbKey = localStorage.getItem('tmdbKey') || '';
+        let cache = JSON.parse(localStorage.getItem('tmdbCache')) || {};
+        let movies = [];
+        let activeFilters = { type: [], decade: [], streaming: [] };
+        let searchQuery = '';
+
+        document.getElementById('api-key').value = tmdbKey;
+
+        function saveKey() {
+            tmdbKey = document.getElementById('api-key').value.trim();
+            localStorage.setItem('tmdbKey', tmdbKey);
+            alert('Chave salva no navegador!');
+        }
+
+        function getHeaders() {
+            let h = { 'accept': 'application/json' };
+            if (tmdbKey.length > 50) h['Authorization'] = `Bearer ${tmdbKey}`;
+            return h;
+        }
+
+        function getQuery() { return tmdbKey.length <= 50 && tmdbKey ? `api_key=${tmdbKey}&` : ''; }
+
+        function esc(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // CSV Parser
+        async function loadCSV() {
+            try {
+                let res = await fetch('watchlist.csv');
+                if (!res.ok) res = await fetch('watchlist-bissigorafael-2026-10-05-11-32-utc.csv');
+                if (res.ok) {
+                    processCSV(await res.text());
+                } else {
+                    document.getElementById('btn-upload').style.display = 'inline-block';
+                }
+            } catch(e) {
+                document.getElementById('btn-upload').style.display = 'inline-block';
+            }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => { processCSV(evt.target.result); document.getElementById('btn-upload').style.display = 'none'; };
+            reader.readAsText(file);
+        }
+
+        function processCSV(text) {
+            const rows = []; let row = []; let inQ = false; let val = '';
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i], n = text[i+1];
+                if (c === '"' && inQ && n === '"') { val += '"'; i++; }
+                else if (c === '"') { inQ = !inQ; }
+                else if (c === ',' && !inQ) { row.push(val); val = ''; }
+                else if (c === '\n' && !inQ) { row.push(val); rows.push(row); row = []; val = ''; }
+                else if (c !== '\r') { val += c; }
+            }
+            if (val || row.length) { row.push(val); rows.push(row); }
+            
+            const headers = rows[0].map(h => h.trim());
+            const nameIdx = headers.indexOf('Name');
+            const yearIdx = headers.indexOf('Year');
+            const uriIdx = headers.indexOf('Letterboxd URI');
+
+            movies = rows.slice(1).filter(r => r[nameIdx]).map(r => {
+                const year = r[yearIdx] ? parseInt(r[yearIdx]) : null;
+                const decade = year ? `${Math.floor(year/10)*10}s` : 'Sem ano';
+                return { Name: r[nameIdx], Year: year, URI: r[uriIdx], Decade: decade, key: `${r[nameIdx]}-${year||''}` };
+            });
+            updateView();
+        }
+
+        function cleanProvider(name) {
+            let clean = name.replace(/ (with Ads|Standard with Ads)$/i, '');
+            if (RULES.rename[clean]) clean = RULES.rename[clean];
+            return clean;
+        }
+        function isValidProvider(name) {
+            if (name.endsWith(RULES.excludeSuffix)) return false;
+            return !RULES.exclude.includes(name);
+        }
+
+        // View logic
+        function updateView() {
+            renderFilters();
+            renderGrid();
+        }
+
+        function handleSearch(e) {
+            searchQuery = e.target.value;
+            updateView();
+        }
+
+        function toggleFilter(category, value) {
+            const arr = activeFilters[category];
+            const idx = arr.indexOf(value);
+            if (idx > -1) arr.splice(idx, 1);
+            else arr.push(value);
+            updateView();
+        }
+
+        function matchExcluding(m, c, excludeCategory) {
+            if (excludeCategory !== 'type' && activeFilters.type.length > 0) {
+                const mType = c.type === 'tv' ? 'Séries' : 'Filmes';
+                if (!activeFilters.type.includes(mType)) return false;
+            }
+            if (excludeCategory !== 'decade' && activeFilters.decade.length > 0) {
+                if (!activeFilters.decade.includes(m.Decade)) return false;
+            }
+            if (excludeCategory !== 'streaming' && activeFilters.streaming.length > 0) {
+                const mStreams = c.providers || [];
+                if (!activeFilters.streaming.some(s => mStreams.includes(s))) return false;
+            }
+            return true;
+        }
+
+        function renderFilters() {
+            let counts = { type: { 'Filmes':0, 'Séries':0 }, decade: {}, streaming: { 'Paramount+': 0 } };
+            
+            movies.forEach(m => {
+                const c = cache[m.key] || {};
+                const mType = c.type === 'tv' ? 'Séries' : 'Filmes';
+                if (searchQuery && !m.Name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+
+                if (matchExcluding(m, c, 'type')) counts.type[mType] = (counts.type[mType] || 0) + 1;
+                if (matchExcluding(m, c, 'decade')) counts.decade[m.Decade] = (counts.decade[m.Decade] || 0) + 1;
+                if (matchExcluding(m, c, 'streaming')) {
+                    (c.providers || []).forEach(s => counts.streaming[s] = (counts.streaming[s] || 0) + 1);
+                }
+            });
+
+            const fContainer = document.getElementById('filters');
+            fContainer.innerHTML = '';
+            
+            const buildRow = (cat, items, sortFn) => {
+                const row = document.createElement('div');
+                row.className = 'filter-row';
+                items.sort(sortFn).forEach(k => {
+                    const cnt = counts[cat][k] || 0;
+                    if (cnt === 0 && k !== 'Paramount+') return;
+                    const chip = document.createElement('div');
+                    chip.className = `chip ${activeFilters[cat].includes(k) ? 'active' : ''}`;
+                    chip.innerHTML = `${k} <span class="chip-count">(${cnt})</span>`;
+                    chip.onclick = () => toggleFilter(cat, k);
+                    row.appendChild(chip);
+                });
+                if(row.children.length > 0) fContainer.appendChild(row);
+            };
+
+            buildRow('type', Object.keys(counts.type), (a,b) => a.localeCompare(b));
+            buildRow('decade', Object.keys(counts.decade), (a,b) => {
+                if (a === 'Sem ano') return 1; if (b === 'Sem ano') return -1;
+                return parseInt(b) - parseInt(a);
+            });
+            buildRow('streaming', Object.keys(counts.streaming), (a,b) => counts.streaming[b] - counts.streaming[a]);
+        }
+
+        function renderGrid() {
+            let filtered = movies.filter(m => {
+                const c = cache[m.key] || {};
+                if (searchQuery && !m.Name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                if (!matchExcluding(m, c, 'none')) return false; // apply all
+                return true;
+            });
+
+            const main = document.getElementById('library');
+            main.innerHTML = '';
+
+            const byDec = {};
+            filtered.forEach(m => { if(!byDec[m.Decade]) byDec[m.Decade] = []; byDec[m.Decade].push(m); });
+            
+            const decKeys = Object.keys(byDec).sort((a,b) => (a === 'Sem ano' ? 1 : (b === 'Sem ano' ? -1 : parseInt(b) - parseInt(a))));
+
+            decKeys.forEach(dec => {
+                byDec[dec].sort((a,b) => (a.Year || 0) - (b.Year || 0) || a.Name.localeCompare(b.Name));
+                
+                let sec = document.createElement('section');
+                sec.className = 'decade-section';
+                sec.innerHTML = `<h2 class="decade-title">${dec} <span class="decade-count">${byDec[dec].length} títulos</span></h2>
+                                 <div class="shelf" id="shelf-${dec}"></div>`;
+                main.appendChild(sec);
+                
+                const shelf = sec.querySelector('.shelf');
+                byDec[dec].forEach(m => {
+                    const c = cache[m.key] || {};
+                    let posterHtml = c.poster_path 
+                        ? `<img src="https://image.tmdb.org/t/p/w342${c.poster_path}" class="poster-img" loading="lazy" alt="${esc(m.Name)}">`
+                        : `<div class="no-poster">${esc(m.Name)}</div>`;
+                    
+                    let streamHtml = (c.providers || []).slice(0,2).join(', ');
+                    if (c.providers && c.providers.length > 2) streamHtml += '...';
+
+                    let card = document.createElement('div');
+                    card.className = 'movie-card';
+                    card.tabIndex = 0;
+                    card.onclick = () => openModal(m.key);
+                    card.onkeydown = (e) => { if(e.key === 'Enter') openModal(m.key); };
+                    card.innerHTML = `
+                        <div class="poster-wrapper">
+                            ${posterHtml}
+                            <div class="poster-overlay">
+                                <div class="overlay-title">${esc(m.Name)}</div>
+                                <div class="overlay-year">${m.Year || ''}</div>
+                                <div class="overlay-stream">${streamHtml}</div>
+                            </div>
+                        </div>`;
+                    shelf.appendChild(card);
+                });
+            });
+        }
+
+        // Modal
+        async function openModal(movieKey) {
+            const m = movies.find(x => x.key === movieKey);
+            const c = cache[movieKey] || {};
+            const dialog = document.getElementById('movie-modal');
+            renderModalContent(m, c);
+            dialog.showModal();
+
+            if (c.id && !c.creditsFetched) {
+                try {
+                    let res = await fetch(`${TMDB_BASE}/${c.type}/${c.id}?${getQuery()}append_to_response=credits&language=pt-BR`, { headers: getHeaders() });
+                    if(res.ok) {
+                        let d = await res.json();
+                        c.runtime = d.runtime; c.genres = (d.genres||[]).map(g=>g.name);
+                        c.seasons = d.number_of_seasons; c.synopsis = d.overview; c.backdrop = d.backdrop_path;
+                        let crew = d.credits?.crew || [];
+                        c.director = c.type === 'movie' ? crew.find(x=>x.job==='Director')?.name : (d.created_by||[]).map(x=>x.name).join(', ');
+                        c.cast = (d.credits?.cast||[]).slice(0,6).map(x=>x.name);
+                        c.creditsFetched = true;
+                        localStorage.setItem('tmdbCache', JSON.stringify(cache));
+                        renderModalContent(m, c);
+                    }
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        function renderModalContent(m, c) {
+            let bgHtml = c.backdrop ? `<div class="modal-bg" style="background-image: url(https://image.tmdb.org/t/p/w1280${c.backdrop})"></div>` : '';
+            let posterSrc = c.poster_path ? `https://image.tmdb.org/t/p/w500${c.poster_path}` : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            
+            let meta = [];
+            if (m.Year) meta.push(`<span>${m.Year}</span>`);
+            if (c.runtime) meta.push(`<span>${Math.floor(c.runtime/60)}h ${c.runtime%60}min</span>`);
+            if (c.seasons) meta.push(`<span>${c.seasons} temporada${c.seasons>1?'s':''}</span>`);
+            if (c.genres && c.genres.length) meta.push(`<span>${esc(c.genres.join(', '))}</span>`);
+
+            let streams = (c.providers && c.providers.length > 0)
+                ? c.providers.map(s => `<span class="stream-tag">${esc(s)}</span>`).join('')
+                : `<span class="stream-none">Fora dos streamings por assinatura no Brasil</span>`;
+
+            document.getElementById('modal-content').innerHTML = `
+                ${bgHtml}
+                <div class="modal-inner">
+                    <img src="${posterSrc}" class="modal-poster" alt="Poster" ${!c.poster_path ? 'style="opacity:0.1"' : ''}>
+                    <div class="modal-info">
+                        <h2 class="modal-title serif">${esc(m.Name)}</h2>
+                        <div class="modal-meta">${meta.join('')}</div>
+                        ${c.synopsis ? `<div class="modal-synopsis">${esc(c.synopsis)}</div>` : ''}
+                        <div class="modal-credits">
+                            ${c.director ? `<div><strong>${c.type === 'movie' ? 'Direção' : 'Criação'}:</strong> ${esc(c.director)}</div>` : ''}
+                            ${c.cast && c.cast.length ? `<div style="margin-top:4px"><strong>Elenco:</strong> ${esc(c.cast.join(', '))}</div>` : ''}
+                        </div>
+                        <div class="stream-tags">${streams}</div>
+                        <div class="modal-actions">
+                            <a href="${m.URI}" target="_blank" class="btn" style="text-decoration:none">Ver no Letterboxd</a>
+                            <button class="primary" onclick="sortearFilme()">Sortear outro</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function closeModal() { document.getElementById('movie-modal').close(); }
+        document.getElementById('movie-modal').addEventListener('click', e => {
+            const r = document.getElementById('modal-content').getBoundingClientRect();
+            if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeModal();
+        });
+
+        function sortearFilme() {
+            const vis = Array.from(document.querySelectorAll('.movie-card:not([style*="display: none"])'));
+            if (vis.length === 0) return alert('Nenhum filme visível com os filtros atuais.');
+            vis[Math.floor(Math.random() * vis.length)].click();
+        }
+
+        function clearCache() {
+            if(confirm('Apagar dados de streamings e recarregar?')) {
+                localStorage.removeItem('tmdbCache'); cache = {}; updateView();
+            }
+        }
+
+        // TMDB Sync logic
+        async function syncStreamings() {
+            if (!tmdbKey) return alert('Insira a chave do TMDB.');
+            const status = document.getElementById('sync-status');
+            try {
+                let r = await fetch(`${TMDB_BASE}/configuration?${getQuery().replace('&','')}`, { headers: getHeaders() });
+                if(!r.ok) throw new Error('Chave recusada');
+            } catch(e) { return alert('Erro na chave do TMDB. Verifique e tente novamente.'); }
+
+            const now = Date.now();
+            const queue = movies.filter(m => {
+                const c = cache[m.key];
+                return !c || !c.last_sync || (now - c.last_sync > 7 * 24 * 60 * 60 * 1000);
+            });
+
+            if (queue.length === 0) { status.innerText = 'Tudo atualizado!'; return; }
+
+            document.getElementById('sync-progress').style.display = 'block';
+            let done = 0, fails = 0, active = 0, limit = 6;
+
+            const next = () => {
+                if (queue.length === 0 && active === 0) {
+                    document.getElementById('sync-progress').style.display = 'none';
+                    status.innerText = `Sync concluído. Falhas: ${fails}`;
+                    localStorage.setItem('tmdbCache', JSON.stringify(cache));
+                    updateView();
+                    return;
+                }
+                while(active < limit && queue.length > 0) {
+                    let m = queue.shift();
+                    active++;
+                    processMovie(m).then(success => {
+                        if(!success) fails++;
+                        done++; active--;
+                        document.getElementById('sync-bar').style.width = `${(done / (done + queue.length + active))*100}%`;
+                        status.innerText = `Sincronizando... ${done}`;
+                        next();
+                    });
+                }
+            };
+            next();
+        }
+
+        async function processMovie(m) {
+            try {
+                // 1. Search
+                let q = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
+                if (m.Year) q += `&year=${m.Year}`;
+                let res = await fetch(`${TMDB_BASE}/search/movie?${getQuery()}${q}`, { headers: getHeaders() });
+                let data = await res.json();
+                let item = data.results?.[0];
+                let type = 'movie';
+
+                if (!item) {
+                    let qTv = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
+                    if (m.Year) qTv += `&first_air_date_year=${m.Year}`;
+                    res = await fetch(`${TMDB_BASE}/search/tv?${getQuery()}${qTv}`, { headers: getHeaders() });
+                    data = await res.json();
+                    item = data.results?.[0];
+                    type = 'tv';
+                }
+
+                if (!item) { cache[m.key] = { last_sync: Date.now(), not_found: true }; return false; }
+
+                // 2. Fetch providers & poster
+                let origLang = item.original_language || 'en';
+                res = await fetch(`${TMDB_BASE}/${type}/${item.id}?${getQuery()}append_to_response=watch/providers,images&language=pt-BR&include_image_language=${origLang},null`, { headers: getHeaders() });
+                let details = await res.json();
+
+                let providers = [];
+                let br = details['watch/providers']?.results?.BR;
+                if (br && br.flatrate) {
+                    br.flatrate.forEach(p => {
+                        if (isValidProvider(p.provider_name)) providers.push(cleanProvider(p.provider_name));
+                    });
+                }
+                providers = [...new Set(providers)];
+
+                let poster = details.poster_path;
+                if (details.images && details.images.posters) {
+                    let pOrig = details.images.posters.find(x => x.iso_639_1 === origLang);
+                    if (pOrig) poster = pOrig.file_path;
+                }
+
+                cache[m.key] = { id: item.id, type, poster_path: poster, orig_lang: origLang, providers, last_sync: Date.now() };
+                return true;
+            } catch(e) { return false; }
+        }
+
+        window.onload = loadCSV;
+    </script>
+</body>
+</html>
