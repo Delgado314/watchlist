@@ -669,6 +669,12 @@
             margin-bottom: 4px;
         }
 
+        .modal-type {
+            color: var(--gold) !important;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+
         .modal-meta {
             color: var(--text-sec);
             font-size: 0.95rem;
@@ -1695,6 +1701,21 @@
         let cache = JSON.parse(localStorage.getItem('tmdbCache')) || {};
         let movies = [];
         let activeFilters = { type: [], decade: [], streaming: [] };
+
+        // Classificação editorial do acervo: Série, Documentário, Curta ou Filme.
+        // A classificação usa os dados disponíveis do TMDB e evita depender apenas do nome do título.
+        function getContentType(c = {}) {
+            if (c.type === 'tv') return 'Séries';
+
+            const genres = Array.isArray(c.genres) ? c.genres.map(g => String(g).toLowerCase()) : [];
+            const isDocumentary = genres.some(g => g.includes('document'));
+
+            // Para a biblioteca, curta é tratado como formato próprio.
+            // 45 min é um limite editorial conservador para filmes curtos.
+            if (c.type === 'movie' && Number(c.runtime) > 0 && Number(c.runtime) <= 45) return 'Curtas';
+            if (isDocumentary) return 'Documentários';
+            return 'Filmes';
+        }
         let searchQuery = '';
 
         document.getElementById('api-key').value = tmdbKey;
@@ -1882,7 +1903,7 @@
 
         function matchExcluding(m, c, excludeCategory) {
             if (excludeCategory !== 'type' && activeFilters.type.length > 0) {
-                const mType = c.type === 'tv' ? 'Séries' : 'Filmes';
+                const mType = getContentType(c);
                 if (!activeFilters.type.includes(mType)) return false;
             }
             if (excludeCategory !== 'decade' && activeFilters.decade.length > 0) {
@@ -1954,11 +1975,11 @@
         window.addEventListener('resize', updateHeaderHeight);
 
         function renderFilters() {
-            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'NetMovies': 0 } };
+            let counts = { type: { 'Filmes': 0, 'Séries': 0, 'Documentários': 0, 'Curtas': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'NetMovies': 0 } };
 
             movies.forEach(m => {
                 const c = cache[m.key] || {};
-                const mType = c.type === 'tv' ? 'Séries' : 'Filmes';
+                const mType = getContentType(c);
                 if (searchQuery && !m.Name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
                 if (matchExcluding(m, c, 'type')) counts.type[mType] = (counts.type[mType] || 0) + 1;
@@ -1989,6 +2010,19 @@
 
                 const row = document.createElement('div');
                 row.className = 'filter-row';
+
+                // O filtro de conteúdo ganha um estado explícito de "Todos".
+                if (cat === 'type') {
+                    const allChip = document.createElement('div');
+                    allChip.className = `chip ${activeFilters.type.length === 0 ? 'active' : ''}`;
+                    allChip.innerHTML = 'Todos';
+                    allChip.onclick = () => {
+                        activeFilters.type = [];
+                        updateView();
+                    };
+                    row.appendChild(allChip);
+                }
+
                 validItems.forEach(k => {
                     const cnt = counts[cat][k] || 0;
                     const chip = document.createElement('div');
@@ -2127,6 +2161,10 @@
                         let d = await res.json();
                         c.runtime = d.runtime; c.genres = (d.genres || []).map(g => g.name);
                         c.seasons = d.number_of_seasons; c.synopsis = d.overview; c.backdrop = d.backdrop_path;
+                        c.genres = (d.genres || []).map(g => g.name);
+                        c.runtime = d.runtime || c.runtime || 0;
+                        c.seasons = d.number_of_seasons || c.seasons || 0;
+                        try { localStorage.setItem('tmdbCache', JSON.stringify(cache)); } catch (e) { }
                         let crew = d.credits?.crew || [];
                         c.director = c.type === 'movie' ? crew.find(x => x.job === 'Director')?.name : (d.created_by || []).map(x => x.name).join(', ');
                         c.cast = (d.credits?.cast || []).slice(0, 6).map(x => x.name);
@@ -2143,6 +2181,7 @@
             let posterSrc = getPosterUrl(c.poster_path, 'w500') || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
             let meta = [];
+            meta.push(`<span class="modal-type">${getContentType(c)}</span>`);
             if (m.Year) meta.push(`<span>${m.Year}</span>`);
             else meta.push(`<span style="color:var(--gold); font-weight:600">${c.status || 'Não lançado / Em desenvolvimento'}</span>`);
             if (c.runtime) meta.push(`<span>${Math.floor(c.runtime / 60)}h ${c.runtime % 60}min</span>`);
@@ -2152,7 +2191,7 @@
             const validProviders = getValidProviders(c.providers);
             let streams = (validProviders.length > 0)
                 ? validProviders.map(s => `<span class="stream-tag">${esc(s)}</span>`).join('')
-                : `<span class="stream-none">${!m.Year ? 'Filme ainda não lançado' : 'Fora dos streamings por assinatura no Brasil'}</span>`;
+                : `<span class="stream-none">${!m.Year ? 'Título ainda não lançado' : 'Fora dos streamings por assinatura no Brasil'}</span>`;
 
             document.getElementById('modal-content').innerHTML = `
                 ${bgHtml}
@@ -2311,7 +2350,17 @@
                     if (pOrig) poster = pOrig.file_path;
                 }
 
-                cache[m.key] = { id: item.id, type, poster_path: poster, orig_lang: origLang, providers, last_sync: Date.now() };
+                cache[m.key] = {
+                    id: item.id,
+                    type,
+                    poster_path: poster,
+                    orig_lang: origLang,
+                    providers,
+                    runtime: details.runtime || 0,
+                    seasons: details.number_of_seasons || 0,
+                    genres: (details.genres || []).map(g => g.name),
+                    last_sync: Date.now()
+                };
                 return true;
             } catch (e) { return false; }
         }
@@ -2359,7 +2408,7 @@
             card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(m.key) } };
             card.innerHTML = `<div class="poster-wrapper">${posterHtml}<div class="poster-overlay">
       <div class="overlay-title">${esc(m.Name)}</div>
-      <div class="overlay-year">${esc(String(year))}</div>
+      <div class="overlay-year">${esc(String(year))} · ${esc(getContentType(c))}</div>
       ${provider ? `<div class="overlay-stream">${esc(provider)}</div>` : ''}
       ${director ? `<div class="overlay-director">${esc(director)}</div>` : ''}
       ${awaiting ? `<div class="overlay-waiting">Título aguardado</div>` : ''}
