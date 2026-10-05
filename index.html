@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioteca de Filmes</title>
+    <title>Arquivo — cinema pessoal</title>
+    <meta name="description" content="Meu arquivo pessoal de cinema: a fila de filmes e onde assistir cada um.">
+    <meta name="theme-color" content="#0c0e0d">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0e0d'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%2386bfae'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -12,934 +16,156 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #15110d;
-            --surface-color: #201a14;
-            --line-color: #342a20;
-            --text-main: #efe6d8;
-            --text-sec: #9c8f7d;
-            --gold: #d1a954;
-            --wood: #4a3623;
+            --bg: #0c0e0d;
+            --bg-2: #141716;
+            --bg-3: #1d211f;
+            --line: #272c29;
+            --line-2: #353b37;
+            --text: #ebe8e1;
+            --text-2: #8f9a94;
+            --text-3: #5d6761;
+            --accent: #86bfae;
+            --accent-hi: #9fd0c1;
+            --accent-dim: rgba(134, 191, 174, .14);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'DM Sans', system-ui, sans-serif;
+            --ease: cubic-bezier(.16, 1, .3, 1);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
-            padding: 0;
+            padding: 0
+        }
+
+        html {
+            scroll-behavior: smooth
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.5;
-            padding-top: 90px;
+            font: 400 1rem/1.5 var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            padding-top: 64px
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .06;
+            mix-blend-mode: overlay;
+            z-index: 400;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
         }
 
         h1,
         h2,
-        h3,
-        .serif {
-            font-family: 'Fraunces', Georgia, serif;
-            font-weight: 700;
+        h3 {
+            font-family: var(--serif);
+            font-weight: 400
         }
 
-        header {
+        button {
+            font: inherit;
+            color: var(--text);
+            background: var(--bg-2);
+            border: 1px solid var(--line-2);
+            padding: 9px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s, color .15s
+        }
+
+        button:hover {
+            background: var(--bg-3);
+            border-color: var(--text-3)
+        }
+
+        button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            font-weight: 600
+        }
+
+        button.primary:hover {
+            background: var(--accent-hi)
+        }
+
+        button:focus-visible,
+        .chip:focus-visible,
+        .movie-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px
+        }
+
+        input {
+            font: inherit;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            outline: 0
+        }
+
+        /* Cabeçalho */
+        #sync-progress {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background-color: rgba(21, 17, 13, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            border-bottom: 1px solid var(--line-color);
-            padding: 16px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header-top h1 {
-            font-size: 1.8rem;
-            color: var(--gold);
-        }
-
-        /* Botão do Menu Hambúrguer */
-        .hamburger-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--surface-color);
-            border: 1px solid var(--line-color);
-            color: var(--text-main);
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .hamburger-btn:hover {
-            background: var(--line-color);
-            border-color: var(--gold);
-            color: var(--gold);
-        }
-
-        .hamburger-btn.has-active {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: rgba(209, 169, 84, 0.12);
-        }
-
-        .hamburger-icon {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 18px;
-            height: 13px;
-        }
-
-        .hamburger-icon span {
-            display: block;
             height: 2px;
-            width: 100%;
-            background-color: currentColor;
-            border-radius: 2px;
-            transition: all 0.25s ease;
-        }
-
-        .hamburger-btn.open .hamburger-icon span:nth-child(1) {
-            transform: translateY(5.5px) rotate(45deg);
-        }
-
-        .hamburger-btn.open .hamburger-icon span:nth-child(2) {
-            opacity: 0;
-            transform: scaleX(0);
-        }
-
-        .hamburger-btn.open .hamburger-icon span:nth-child(3) {
-            transform: translateY(-5.5px) rotate(-45deg);
-        }
-
-        .filter-badge {
-            background: var(--gold);
-            color: #15110d;
-            font-weight: 700;
-            font-size: 0.72rem;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 9px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .controls {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            background: var(--surface-color);
-            border: 1px solid var(--line-color);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 4px;
-            outline: none;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: var(--gold);
-        }
-
-        button {
-            background: var(--surface-color);
-            color: var(--text-main);
-            border: 1px solid var(--line-color);
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        button:hover {
-            background: var(--line-color);
-        }
-
-        button.primary {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
-            font-weight: bold;
-        }
-
-        button.primary:hover {
-            background: #e2c073;
-        }
-
-        /* Overlay da Gaveta de Filtros */
-        .drawer-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(4px);
-            z-index: 150;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .drawer-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Gaveta Lateral de Filtros */
-        .filter-drawer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 380px;
-            max-width: 88vw;
-            background: var(--surface-color);
-            border-right: 1px solid var(--line-color);
-            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.75);
-            z-index: 160;
-            display: flex;
-            flex-direction: column;
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .filter-drawer.active {
-            transform: translateX(0);
-        }
-
-        .drawer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--line-color);
-            background: rgba(21, 17, 13, 0.45);
-        }
-
-        .drawer-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .drawer-icon-bars {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 16px;
-            height: 12px;
-        }
-
-        .drawer-icon-bars span {
-            display: block;
-            height: 2px;
-            width: 100%;
-            background-color: var(--gold);
-            border-radius: 2px;
-        }
-
-        .drawer-title-wrap h2 {
-            font-size: 1.35rem;
-            color: var(--gold);
-            margin: 0;
-        }
-
-        .drawer-count-badge {
-            font-size: 0.75rem;
-            background: rgba(209, 169, 84, 0.2);
-            color: var(--gold);
-            border: 1px solid rgba(209, 169, 84, 0.3);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
-        .drawer-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .drawer-clear-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-sec);
-            font-size: 0.85rem;
-            cursor: pointer;
-            padding: 4px 6px;
-            text-decoration: underline;
-            transition: color 0.2s;
-        }
-
-        .drawer-clear-btn:hover {
-            color: var(--gold);
-            background: transparent;
-        }
-
-        .drawer-close-btn {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--line-color);
-            color: var(--text-main);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            line-height: 1;
-            transition: all 0.2s;
-            padding: 0;
-        }
-
-        .drawer-close-btn:hover {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
-        }
-
-        .drawer-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-        }
-
-        .drawer-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .drawer-body::-webkit-scrollbar-thumb {
-            background: var(--line-color);
-            border-radius: 3px;
-        }
-
-        .drawer-body::-webkit-scrollbar-thumb:hover {
-            background: var(--wood);
-        }
-
-        .filter-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .filter-section-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--gold);
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 4px;
-            border-bottom: 1px solid rgba(52, 42, 32, 0.6);
-        }
-
-        .filter-section-title .section-active-tag {
-            font-size: 0.75rem;
-            color: var(--text-sec);
-            text-transform: none;
-            font-weight: normal;
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .chip {
-            background: var(--surface-color);
-            border: 1px solid var(--line-color);
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .chip:hover {
-            background: var(--line-color);
-            border-color: rgba(209, 169, 84, 0.4);
-        }
-
-        .chip.active {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
-            font-weight: 600;
-        }
-
-        .chip-count {
-            opacity: 0.7;
-            margin-left: 5px;
-            font-size: 0.85em;
-        }
-
-        .drawer-footer {
-            padding: 14px 20px;
-            border-top: 1px solid var(--line-color);
-            background: rgba(21, 17, 13, 0.6);
-        }
-
-        .drawer-apply-btn {
-            width: 100%;
-            padding: 10px 16px;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        main {
-            padding: 24px;
-            max-width: 100%;
-            overflow: hidden;
-        }
-
-        .decade-section {
-            margin-bottom: 56px;
-            content-visibility: auto;
-            contain-intrinsic-size: 400px;
-        }
-
-        .decade-title {
-            font-size: 2rem;
-            border-bottom: 2px solid var(--line-color);
-            padding-bottom: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
-        }
-
-        .decade-count {
-            font-size: 1rem;
-            color: var(--text-sec);
-            font-family: system-ui, sans-serif;
-            font-weight: normal;
-        }
-
-        /* Layout em Carrossel Horizontal */
-        .shelf {
-            display: flex;
-            overflow-x: auto;
-            gap: 20px;
-            padding: 10px 0 24px 0;
-            scroll-behavior: smooth;
-        }
-
-        .shelf::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .shelf::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        .shelf::-webkit-scrollbar-thumb {
-            background: var(--line-color);
-            border-radius: 4px;
-        }
-
-        .shelf::-webkit-scrollbar-thumb:hover {
-            background: var(--text-sec);
-        }
-
-        .movie-card {
-            flex: 0 0 180px;
-            /* Largura fixa para manter o carrossel uniforme */
-            position: relative;
-            cursor: pointer;
-            outline: none;
-            border-radius: 4px;
-            display: block;
-        }
-
-        .movie-card:focus-visible {
-            outline: 2px solid var(--gold);
-            outline-offset: 4px;
-        }
-
-        .poster-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            background: var(--surface-color);
-            border-radius: 4px;
-            box-shadow: 0 5px 0 var(--wood), 0 8px 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease;
-            overflow: hidden;
-        }
-
-        .movie-card:hover .poster-wrapper,
-        .movie-card:focus-visible .poster-wrapper {
-            transform: translateY(-8px);
-        }
-
-        .poster-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .no-poster {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 16px 12px;
-            background: linear-gradient(160deg, #2a1f14 0%, #1a1208 40%, #0e0b07 100%);
-            gap: 10px;
-        }
-
-        .no-poster-icon {
-            font-size: 2rem;
-            opacity: 0.35;
-            line-height: 1;
-        }
-
-        .no-poster-title {
-            color: var(--text-sec);
-            font-size: 0.8rem;
-            line-height: 1.3;
-            font-family: 'Fraunces', Georgia, serif;
-            font-weight: 700;
-            word-break: break-word;
-            hyphens: auto;
-            opacity: 0.75;
-        }
-
-        .no-poster-label {
-            font-size: 0.65rem;
-            color: var(--gold);
-            opacity: 0.5;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        /* Overlay sempre visível com o estilo da imagem de referência */
-        .poster-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(10, 8, 6, 1) 0%, rgba(10, 8, 6, 0.85) 25%, transparent 60%);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 16px 12px 12px 12px;
-            pointer-events: none;
-        }
-
-        .overlay-title {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #ffffff;
-            margin-bottom: 6px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 0px 0px 8px rgba(0, 0, 0, 0.8);
-            line-height: 1.15;
-        }
-
-        .overlay-year {
-            font-size: 0.9rem;
-            color: var(--gold);
-            margin-bottom: 2px;
-            font-weight: 500;
-        }
-
-        .overlay-stream {
-            font-size: 0.85rem;
-            color: #b0a595;
-            line-height: 1.3;
-        }
-
-        dialog {
-            margin: auto;
-            max-width: 900px;
-            width: 90%;
-            background: var(--bg-color);
-            color: var(--text-main);
-            border: 1px solid var(--line-color);
-            border-radius: 8px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-            padding: 0;
-            overflow: hidden;
-        }
-
-        dialog::backdrop {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-content {
-            position: relative;
-            display: flex;
-            min-height: 450px;
-        }
-
-        .modal-bg {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            opacity: 0.25;
-            background-size: cover;
-            background-position: center top;
-            mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
-            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
-            filter: blur(6px);
-        }
-
-        .modal-inner {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            gap: 32px;
-            padding: 40px;
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        .modal-poster {
-            flex-shrink: 0;
-            width: 280px;
-            border-radius: 4px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-            aspect-ratio: 2/3;
-            object-fit: cover;
-        }
-
-        .modal-info {
-            flex: 1;
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .modal-title {
-            font-size: 2.5rem;
-            color: var(--gold);
-            line-height: 1.1;
-            margin-bottom: 4px;
-        }
-
-        .modal-type {
-            color: var(--gold) !important;
-            font-weight: 600;
-            letter-spacing: .02em;
-        }
-
-        .modal-meta {
-            color: var(--text-sec);
-            font-size: 0.95rem;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .modal-meta span::after {
-            content: "·";
-            margin-left: 8px;
-        }
-
-        .modal-meta span:last-child::after {
-            content: "";
-        }
-
-        .modal-synopsis {
-            margin-top: 12px;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .modal-credits {
-            margin-top: 16px;
-            font-size: 0.95rem;
-            color: var(--text-sec);
-            line-height: 1.5;
-        }
-
-        .modal-credits strong {
-            color: var(--text-main);
-        }
-
-        .stream-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 24px;
-        }
-
-        .stream-tag {
-            background: rgba(209, 169, 84, 0.1);
-            color: var(--gold);
-            border: 1px solid var(--gold);
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-
-        .stream-none {
-            color: var(--text-sec);
-            border: 1px solid var(--line-color);
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        .modal-actions {
-            margin-top: auto;
-            padding-top: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .letterboxd-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 8px 14px;
-            border: 1px solid var(--line-medium);
-            border-radius: 3px;
-            background: transparent;
-            color: var(--text-primary);
-            font: 600 .78rem 'DM Sans', sans-serif;
-            letter-spacing: .01em;
-            text-decoration: none;
-            transition: color .12s, background .12s, border-color .12s;
-        }
-
-        .letterboxd-btn:hover {
-            color: var(--gold);
-            background: var(--bg-secondary);
-            border-color: var(--gold);
-        }
-
-        .letterboxd-btn:focus-visible {
-            outline: 2px solid var(--gold);
-            outline-offset: 2px;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--line-color);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-btn:hover {
-            background: var(--gold);
-            color: black;
-        }
-
-        #sync-progress {
-            display: none;
-            width: 100%;
-            height: 4px;
-            background: var(--surface-color);
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 200;
+            z-index: 300
         }
 
         #sync-bar {
-            width: 0%;
             height: 100%;
-            background: var(--gold);
-            transition: width 0.2s;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 24px;
-            color: var(--text-sec);
-            font-size: 0.85rem;
-            border-top: 1px solid var(--line-color);
-            margin-top: 40px;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding-top: 150px;
-            }
-
-            .modal-inner {
-                flex-direction: column;
-                align-items: center;
-                padding: 24px;
-            }
-
-            .modal-info {
-                text-align: center;
-                align-items: center;
-            }
-
-            .modal-meta {
-                justify-content: center;
-            }
-
-            .modal-poster {
-                width: 200px;
-            }
-
-            .modal-actions {
-                justify-content: center;
-            }
-        }
-
-        @media (prefers-reduced-motion) {
-
-            .poster-wrapper,
-            .poster-overlay {
-                transition: none;
-            }
-
-            .movie-card:hover .poster-wrapper,
-            .movie-card:focus-visible .poster-wrapper {
-                transform: none;
-                box-shadow: 0 0 0 2px var(--gold);
-            }
-        }
-
-        /* =========================================================
-   CINEMA ARCHIVE REDESIGN — editorial layer
-   ========================================================= */
-        :root {
-            --bg-primary: #0f0d0a;
-            --bg-secondary: #1a1510;
-            --bg-tertiary: #251d15;
-            --line-subtle: #2e2419;
-            --line-medium: #3d3020;
-            --text-primary: #ede3d3;
-            --text-secondary: #8c7d6c;
-            --text-muted: #5a4d3e;
-            --gold: #c9a44a;
-            --gold-dim: rgba(201, 164, 74, .15);
-            --gold-border: rgba(201, 164, 74, .25);
-            --bg-color: var(--bg-primary);
-            --surface-color: var(--bg-secondary);
-            --line-color: var(--line-subtle);
-            --text-main: var(--text-primary);
-            --text-sec: var(--text-secondary);
-            --duration-fast: 120ms;
-            --duration-normal: 220ms;
-            --duration-slow: 350ms;
-        }
-
-        body {
-            font-family: 'DM Sans', system-ui, sans-serif;
-            background: var(--bg-primary);
-            padding-top: 64px
-        }
-
-        h1,
-        h2,
-        h3,
-        .serif {
-            font-family: 'Fraunces', Georgia, serif
+            width: 0;
+            background: var(--accent);
+            transition: width .2s
         }
 
         .site-header {
-            height: 64px;
-            padding: 0 48px;
-            display: block;
-            background: rgba(15, 13, 10, .82);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(12, 14, 13, .82);
             backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(61, 48, 32, .65)
+            border-bottom: 1px solid var(--line);
+            padding: 0 48px
         }
 
         .header-inner {
-            height: 64px;
             max-width: 1440px;
+            height: 64px;
             margin: auto;
             display: grid;
-            grid-template-columns: 220px minmax(280px, 560px) 1fr;
+            grid-template-columns: 220px minmax(240px, 560px) 1fr;
             align-items: center;
             gap: 32px
         }
 
         .brand {
-            text-decoration: none;
-            color: var(--text-primary);
             display: flex;
             align-items: baseline;
-            gap: 9px;
+            gap: 10px;
+            color: var(--text);
+            text-decoration: none;
             white-space: nowrap
         }
 
         .brand-mark {
-            font: 700 1.35rem/1 'Fraunces', Georgia, serif;
-            letter-spacing: -.02em
+            font: 600 1.45rem/1 var(--serif);
+            letter-spacing: -.03em
         }
 
         .brand-sub {
-            font-size: .68rem;
-            text-transform: uppercase;
-            letter-spacing: .13em;
-            color: var(--text-secondary)
+            font-size: .76rem;
+            color: var(--text-2)
         }
 
         .search-shell {
@@ -947,36 +173,33 @@
             display: flex;
             align-items: center;
             gap: 9px;
-            background: rgba(26, 21, 16, .8);
-            border: 1px solid var(--line-medium);
             padding: 0 10px 0 13px;
-            transition: border-color .12s, box-shadow .12s
+            background: var(--bg-2);
+            border: 1px solid var(--line-2);
+            border-radius: 3px;
+            transition: border-color .15s
         }
 
         .search-shell:focus-within {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(201, 164, 74, .08)
+            border-color: var(--accent)
         }
 
         .search-icon {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
+            color: var(--text-2);
+            font-size: 1.2rem;
             transform: rotate(-20deg)
         }
 
         .search-shell input {
-            border: 0 !important;
-            background: transparent !important;
-            padding: 0 !important;
             width: 100%;
-            font: 400 .88rem 'DM Sans', sans-serif
+            font-size: .9rem
         }
 
         .search-shell kbd {
             font: 500 .7rem 'DM Mono', monospace;
-            color: var(--text-muted);
-            border: 1px solid var(--line-medium);
-            padding: 2px 5px;
+            color: var(--text-3);
+            border: 1px solid var(--line-2);
+            padding: 1px 6px;
             border-radius: 3px
         }
 
@@ -990,83 +213,335 @@
         .quiet-btn,
         .settings-btn {
             background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-secondary);
-            padding: 8px 11px
+            border-color: transparent;
+            color: var(--text-2)
         }
 
         .quiet-btn:hover,
-        .settings-btn:hover {
-            color: var(--text-primary);
-            background: var(--bg-secondary);
-            border-color: var(--line-medium)
+        .settings-btn:hover,
+        .quiet-btn.has-active {
+            color: var(--text);
+            background: var(--bg-2);
+            border-color: var(--line-2)
+        }
+
+        .quiet-btn.has-active {
+            color: var(--accent)
         }
 
         .settings-btn {
-            font-size: 1rem;
             width: 36px;
             height: 36px;
-            padding: 0
+            padding: 0;
+            font-size: 1rem
         }
 
         .discover-btn {
-            background: var(--gold);
-            color: #161108;
-            border: 1px solid var(--gold);
-            font-weight: 600;
-            padding: 9px 16px;
-            border-radius: 3px
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            font-weight: 600
         }
 
         .discover-btn:hover {
-            background: #d7b45a
+            background: var(--accent-hi);
+            border-color: var(--accent-hi)
+        }
+
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            margin-left: 4px;
+            border-radius: 9px;
+            background: var(--accent);
+            color: var(--bg);
+            font-size: .72rem;
+            font-weight: 700
         }
 
         .sync-status {
             position: absolute;
             right: 48px;
-            top: 66px;
+            top: 68px;
             font-size: .72rem;
-            color: var(--text-secondary)
+            color: var(--text-2)
+        }
+
+        /* Gaveta de filtros */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 150;
+            background: rgba(0, 0, 0, .6);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .25s, visibility .25s
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible
+        }
+
+        .filter-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 160;
+            width: min(380px, 92vw);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-2);
+            border-left: 1px solid var(--line-2);
+            transform: translateX(100%);
+            transition: transform .3s var(--ease)
+        }
+
+        .filter-drawer.active {
+            transform: none
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .drawer-title-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 12px
+        }
+
+        .drawer-title-wrap h2 {
+            font-size: 1.5rem
+        }
+
+        .drawer-count-badge {
+            font-size: .78rem;
+            color: var(--accent)
+        }
+
+        .drawer-header-actions {
+            display: flex;
+            gap: 6px
+        }
+
+        .drawer-clear-btn,
+        .drawer-close-btn {
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-2);
+            padding: 6px 10px
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 24px 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line-2) transparent
+        }
+
+        .filter-section {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .filter-section-title {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font: 600 .9rem var(--serif);
+            color: var(--text)
+        }
+
+        .section-active-tag {
+            font: 400 .76rem var(--sans);
+            color: var(--accent)
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border: 1px solid var(--line-2);
+            border-radius: 99px;
+            font-size: .84rem;
+            color: var(--text-2);
+            cursor: pointer;
+            user-select: none;
+            transition: all .15s
+        }
+
+        .chip:hover {
+            color: var(--text);
+            border-color: var(--text-3)
+        }
+
+        .chip.active {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+            font-weight: 500
+        }
+
+        .chip-count {
+            opacity: .6;
+            font-size: .76rem
+        }
+
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--line)
+        }
+
+        .drawer-apply-btn {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px
+        }
+
+        /* Página */
+        main#library,
+        .site-footer {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding-left: 48px;
+            padding-right: 48px
         }
 
         main#library {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 0 48px 72px
+            padding-bottom: 72px
         }
 
         .archive-intro {
-            padding: 76px 0 62px;
+            padding: 44px 0 36px;
             max-width: 880px
         }
 
-        .archive-kicker {
-            font-size: .7rem;
-            text-transform: uppercase;
-            letter-spacing: .16em;
-            color: var(--gold);
-            margin-bottom: 17px
-        }
-
         .archive-intro h1 {
-            font-size: clamp(2.7rem, 5vw, 4.5rem);
-            font-weight: 400;
-            line-height: .98;
+            font-size: clamp(2rem, 3.6vw, 3rem);
+            line-height: 1.02;
             letter-spacing: -.04em;
-            margin-bottom: 22px
+            margin-bottom: 16px
         }
 
         .archive-intro p {
-            font: italic 1.25rem/1.55 'Fraunces', Georgia, serif;
-            color: var(--text-secondary);
-            max-width: 720px
+            font: italic 1.1rem/1.55 var(--serif);
+            color: var(--text-2);
+            max-width: 680px
         }
 
-        .archive-rule {
-            height: 1px;
-            background: linear-gradient(90deg, var(--line-medium), transparent);
-            margin-top: 42px
+        .archive-intro strong {
+            color: var(--text);
+            font-weight: 400
+        }
+
+        .featured {
+            position: relative;
+            isolation: isolate;
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 44px;
+            align-items: end;
+            padding: 40px;
+            margin: 0 0 72px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            overflow: hidden
+        }
+
+        .featured::before {
+            content: '';
+            position: absolute;
+            inset: -40px;
+            z-index: -1;
+            background: var(--poster) center/cover;
+            filter: blur(60px) saturate(1.3);
+            opacity: .28
+        }
+
+        .featured::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(90deg, rgba(12, 14, 13, .55), rgba(12, 14, 13, .9))
+        }
+
+        .featured-poster {
+            position: relative;
+            aspect-ratio: 2/3;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+            background: var(--bg-2);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, .55);
+            transition: transform .35s var(--ease)
+        }
+
+        .featured-poster:hover {
+            transform: rotate(-1.2deg) scale(1.02)
+        }
+
+        .featured-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block
+        }
+
+        .featured-label {
+            font-size: .92rem;
+            color: var(--accent);
+            margin-bottom: 14px
+        }
+
+        .featured h2 {
+            font-size: clamp(2.2rem, 5vw, 4.2rem);
+            line-height: 1;
+            letter-spacing: -.035em;
+            margin-bottom: 18px
+        }
+
+        .featured-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 18px;
+            color: var(--text-2);
+            margin-bottom: 8px
+        }
+
+        .featured-added,
+        .modal-added {
+            font: italic 1rem var(--serif);
+            color: var(--text-2);
+            margin-bottom: 22px
+        }
+
+        .featured .stream-tags {
+            margin-bottom: 26px
+        }
+
+        .featured-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap
         }
 
         .decade-section {
@@ -1074,267 +549,535 @@
         }
 
         .decade-title {
-            font-size: 2.2rem;
-            font-weight: 400;
-            border: 0;
-            padding: 0;
-            margin: 0 0 20px;
             display: flex;
-            align-items: baseline;
-            gap: 12px
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 18px;
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 300;
+            letter-spacing: -.045em;
+            line-height: 1
+        }
+
+        .decade-title::after {
+            content: '';
+            order: 2;
+            flex: 1;
+            height: 1px;
+            background: var(--line)
         }
 
         .decade-count {
-            font: 400 .76rem 'DM Sans', sans-serif;
-            color: var(--text-secondary);
-            letter-spacing: .02em
+            order: 3;
+            font: 400 .8rem var(--sans);
+            letter-spacing: 0;
+            color: var(--text-2)
+        }
+
+        .awaiting-section .decade-title {
+            color: var(--accent)
+        }
+
+        .shelf,
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            column-gap: 22px
         }
 
         .shelf {
-            gap: 22px;
-            padding: 8px 0 22px;
-            scrollbar-color: var(--line-medium) transparent
+            grid-template-rows: auto;
+            grid-auto-rows: 0;
+            row-gap: 0;
+            overflow: hidden;
+            padding: 8px 0 22px
+        }
+
+        .see-all {
+            order: 4;
+            font: 500 .84rem var(--sans);
+            letter-spacing: 0;
+            padding: 6px 14px;
+            border-radius: 99px;
+            color: var(--accent);
+            border-color: var(--accent-dim);
+            background: var(--accent-dim);
+            white-space: nowrap
+        }
+
+        .see-all:hover {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent)
+        }
+
+        #collection-modal {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            max-height: none;
+            margin: 0;
+            border: 0;
+            border-radius: 0;
+            background: var(--bg)
+        }
+
+        .collection-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px 48px;
+            background: rgba(12, 14, 13, .88);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--line)
+        }
+
+        .collection-head h2 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 300;
+            letter-spacing: -.04em;
+            line-height: 1
+        }
+
+        .collection-count {
+            flex: 1;
+            font-size: .84rem;
+            color: var(--text-2)
+        }
+
+        .collection-body {
+            height: 100%;
+            overflow-y: auto
+        }
+
+        .collection-grid {
+            row-gap: 34px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 40px 48px 80px
         }
 
         .movie-card {
-            flex: 0 0 190px
+            min-width: 0;
+            cursor: pointer;
+            outline: none
         }
 
         .poster-wrapper {
-            border-radius: 0;
-            background: var(--bg-secondary);
-            box-shadow: 0 6px 0 #21170e, 0 14px 28px rgba(0, 0, 0, .34);
-            transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s
+            position: relative;
+            aspect-ratio: 2/3;
+            overflow: hidden;
+            background: var(--bg-2);
+            transition: transform .25s var(--ease), box-shadow .25s
         }
 
         .movie-card:hover .poster-wrapper,
         .movie-card:focus-visible .poster-wrapper {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 0 #21170e, 0 22px 34px rgba(0, 0, 0, .52)
+            transform: translateY(-6px);
+            box-shadow: 0 18px 30px rgba(0, 0, 0, .5)
         }
 
-        .poster-overlay {
-            padding: 18px 13px 13px;
-            background: linear-gradient(to top, rgba(7, 6, 4, .98), rgba(7, 6, 4, .72) 28%, transparent 65%)
-        }
-
-        .overlay-title {
-            font-size: .95rem;
-            line-height: 1.12
-        }
-
-        .overlay-year {
-            font-size: .78rem;
-            color: var(--gold);
-            margin-top: 4px
-        }
-
-        .overlay-stream {
-            font-size: .72rem;
-            color: #b1a595;
-            margin-top: 2px
-        }
-
-        .overlay-director,
-        .overlay-waiting {
-            font-size: .68rem;
-            color: #d0c3b1;
-            margin-top: 5px;
-            opacity: 0;
-            transform: translateY(3px);
-            transition: opacity .18s, transform .18s
-        }
-
-        .movie-card:hover .overlay-director,
-        .movie-card:focus-visible .overlay-director,
-        .movie-card:hover .overlay-waiting,
-        .movie-card:focus-visible .overlay-waiting {
-            opacity: .9;
-            transform: none
-        }
-
-        .awaiting-section .decade-title {
-            color: var(--text-primary)
-        }
-
-        .awaiting-section .decade-title::before {
-            content: '●';
-            font: 400 .65rem 'DM Sans', sans-serif;
-            color: var(--gold);
-            margin-right: 2px
-        }
-
-        .awaiting-card .poster-wrapper {
-            outline: 1px solid var(--gold-border);
-            box-shadow: 0 6px 0 #21170e, 0 0 0 1px rgba(201, 164, 74, .08)
-        }
-
-        .awaiting-card .poster-wrapper::after {
-            content: 'EM BREVE';
-            position: absolute;
-            top: 9px;
-            left: 9px;
-            font-size: .58rem;
-            letter-spacing: .12em;
-            color: var(--gold);
-            background: rgba(15, 13, 10, .82);
-            padding: 4px 6px;
-            border: 1px solid var(--gold-border)
+        .poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block
         }
 
         .no-poster {
-            background: linear-gradient(145deg, #282016, #120f0b);
-            padding: 20px
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 18px;
+            background: linear-gradient(160deg, var(--bg-3), var(--bg))
         }
 
         .no-poster-icon {
             font-size: 1.5rem;
-            opacity: .2
+            opacity: .25
         }
 
-        .no-poster-label {
-            color: var(--gold);
-            font-size: .6rem
+        .no-poster-title {
+            font: 600 1rem/1.2 var(--serif)
         }
 
         .no-poster-director {
-            font-size: .7rem;
-            color: var(--text-secondary)
+            font-size: .74rem;
+            color: var(--text-2)
+        }
+
+        .no-poster-label {
+            font-size: .72rem;
+            color: var(--accent)
+        }
+
+        .awaiting-card .poster-wrapper::after {
+            content: 'Em breve';
+            position: absolute;
+            top: 9px;
+            left: 9px;
+            padding: 3px 8px;
+            font-size: .68rem;
+            color: var(--accent);
+            background: rgba(12, 14, 13, .85);
+            border: 1px solid var(--accent-dim);
+            border-radius: 2px
+        }
+
+        .card-caption {
+            margin-top: 14px
+        }
+
+        .card-title {
+            font: 600 .95rem/1.2 var(--serif);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        .card-meta {
+            margin-top: 4px;
+            font-size: .78rem;
+            color: var(--text-2)
+        }
+
+        .card-meta .on {
+            color: var(--accent)
+        }
+
+        .quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 14px
+        }
+
+        .quick-row+section {
+            margin-top: 40px
+        }
+
+        .quick-label {
+            min-width: 92px
+        }
+
+        .quick-label {
+            margin-right: 6px;
+            font-size: .84rem;
+            color: var(--text-2)
+        }
+
+        .quick-row .chip:not(.active) {
+            background: transparent
+        }
+
+        .related-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .related-row button {
+            width: 72px;
+            aspect-ratio: 2/3;
+            padding: 0;
+            overflow: hidden;
+            border: 0;
+            background: var(--bg-3);
+            transition: transform .2s var(--ease)
+        }
+
+        .related-row button:hover {
+            transform: translateY(-4px)
+        }
+
+        .related-row img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block
         }
 
         .empty-state {
             padding: 80px 0;
-            text-align: left;
-            color: var(--text-secondary)
+            color: var(--text-2)
         }
 
         .empty-state strong {
             display: block;
-            font: 400 2rem 'Fraunces', serif;
-            color: var(--text-primary);
-            margin-bottom: 8px
+            margin-bottom: 8px;
+            font: 400 2rem var(--serif);
+            color: var(--text)
         }
 
         .site-footer {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 44px 48px 56px;
-            border-top: 1px solid var(--line-subtle)
+            padding-top: 44px;
+            padding-bottom: 56px;
+            border-top: 1px solid var(--line)
         }
 
         .footer-stats {
-            font: 400 1.05rem 'Fraunces', serif;
-            color: var(--text-primary);
-            margin-bottom: 18px
+            margin-bottom: 18px;
+            font: 400 1.05rem var(--serif)
         }
 
         .footer-stats b {
-            color: var(--gold);
-            font-weight: 700
+            color: var(--accent);
+            font-weight: 600
         }
 
         .footer-credit {
             display: flex;
             justify-content: space-between;
             gap: 20px;
-            color: var(--text-muted);
-            font-size: .72rem;
-            line-height: 1.5
+            color: var(--text-3);
+            font-size: .74rem
         }
 
-        .utility-dialog,
-        .discovery-dialog {
-            width: min(680px, 92vw);
-            background: var(--bg-secondary);
-            border: 1px solid var(--line-medium);
-            border-radius: 10px;
-            color: var(--text-primary);
+        /* Ficha do filme e diálogos */
+        dialog {
+            margin: auto;
+            color: var(--text);
+            background: var(--bg-2);
+            border: 1px solid var(--line-2);
+            border-radius: 8px;
             padding: 0;
-            box-shadow: 0 28px 90px rgba(0, 0, 0, .72)
+            box-shadow: 0 30px 90px rgba(0, 0, 0, .7);
+            overflow: hidden
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, .72);
+            backdrop-filter: blur(5px)
+        }
+
+        #movie-modal {
+            width: min(920px, 94vw);
+            max-height: 90vh
+        }
+
+        .modal-content {
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto
+        }
+
+        .modal-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center top;
+            opacity: .22
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent, var(--bg-2) 70%);
+            pointer-events: none
+        }
+
+        .modal-inner {
+            position: relative;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 40px;
+            padding: 48px
+        }
+
+        .modal-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, .5)
+        }
+
+        .modal-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.02;
+            letter-spacing: -.03em;
+            margin-bottom: 14px
+        }
+
+        .modal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 16px;
+            color: var(--text-2);
+            font-size: .92rem;
+            margin-bottom: 12px
+        }
+
+        .modal-type {
+            color: var(--accent)
+        }
+
+        .modal-added {
+            margin: 0 0 18px
+        }
+
+        .modal-synopsis {
+            font: 1.05rem/1.7 var(--serif);
+            max-width: 62ch;
+            margin-bottom: 20px
+        }
+
+        .modal-credits {
+            color: var(--text-2);
+            font-size: .92rem;
+            line-height: 1.6;
+            max-width: 62ch
+        }
+
+        .modal-credits strong {
+            color: var(--text);
+            font-weight: 500
+        }
+
+        .modal-label {
+            margin: 22px 0 8px;
+            font-size: .8rem;
+            color: var(--text-2)
+        }
+
+        .stream-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .stream-tag {
+            padding: 5px 12px;
+            font-size: .84rem;
+            color: var(--accent);
+            border: 1px solid var(--accent-dim);
+            background: var(--accent-dim);
+            border-radius: 99px
+        }
+
+        .stream-none {
+            font-size: .88rem;
+            color: var(--text-2);
+            font-style: italic
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 26px
+        }
+
+        .letterboxd-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 9px 15px;
+            color: var(--text);
+            text-decoration: none;
+            border: 1px solid var(--line-2);
+            border-radius: 3px
+        }
+
+        .letterboxd-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        .close-btn,
+        .icon-close {
+            background: transparent;
+            border-color: transparent;
+            font-size: 1.5rem;
+            line-height: 1;
+            padding: 4px 11px
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 5;
+            background: rgba(12, 14, 13, .6)
+        }
+
+        .utility-dialog {
+            width: min(560px, 92vw)
         }
 
         .discovery-dialog {
-            width: min(1050px, 94vw)
-        }
-
-        .utility-dialog::backdrop,
-        .discovery-dialog::backdrop {
-            background: rgba(5, 4, 3, .78);
-            backdrop-filter: blur(8px)
+            width: min(1000px, 94vw)
         }
 
         .utility-head {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 28px 30px 20px;
-            border-bottom: 1px solid var(--line-subtle)
+            padding: 28px 32px 8px
         }
 
         .utility-head h2 {
-            font-size: 1.8rem;
-            font-weight: 400;
-            margin-top: 5px
+            font-size: 1.8rem
         }
 
         .eyebrow {
-            font: 500 .65rem 'DM Sans', sans-serif;
-            letter-spacing: .15em;
-            color: var(--gold)
-        }
-
-        .icon-close {
-            background: transparent;
-            border: 1px solid var(--line-medium);
-            width: 34px;
-            height: 34px;
-            padding: 0;
-            font-size: 1.2rem
+            font-size: .78rem;
+            color: var(--accent)
         }
 
         .settings-body {
-            padding: 26px 30px 30px
+            padding: 8px 32px 32px
         }
 
         .setting-label {
             display: block;
-            font-size: .8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: .07em
+            font-size: .88rem;
+            color: var(--text-2)
         }
 
         .setting-label input {
             display: block;
             width: 100%;
             margin-top: 8px;
-            background: var(--bg-primary);
-            border: 1px solid var(--line-medium);
-            color: var(--text-primary);
-            padding: 12px
+            padding: 10px 12px;
+            background: var(--bg);
+            border: 1px solid var(--line-2);
+            border-radius: 3px
+        }
+
+        .setting-label input:focus {
+            border-color: var(--accent)
         }
 
         .setting-help {
-            font-size: .78rem;
-            color: var(--text-muted);
-            margin: 10px 0 22px
+            margin: 10px 0 20px;
+            font-size: .82rem;
+            color: var(--text-3)
         }
 
         .settings-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px
+            gap: 10px
         }
 
-        .danger-btn {
-            color: #c8a8a0
+        .danger-btn:hover {
+            border-color: #d98a80;
+            color: #d98a80
         }
 
         .discovery-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 28px 30px
+            gap: 28px;
+            padding: 16px 32px 8px
         }
 
         .discovery-card {
@@ -1342,183 +1085,146 @@
         }
 
         .discovery-poster {
+            position: relative;
             aspect-ratio: 2/3;
             overflow: hidden;
-            background: var(--bg-primary);
-            border: 1px solid var(--line-subtle)
+            background: var(--bg-3);
+            transition: transform .25s var(--ease)
+        }
+
+        .discovery-card:hover .discovery-poster {
+            transform: translateY(-5px)
         }
 
         .discovery-poster img {
             width: 100%;
             height: 100%;
-            object-fit: cover
+            object-fit: cover;
+            display: block
         }
 
         .discovery-info {
-            padding-top: 11px
+            margin-top: 12px
         }
 
         .discovery-info h3 {
-            font-size: 1.15rem;
-            font-weight: 400;
-            line-height: 1.15
+            font-size: 1.1rem;
+            line-height: 1.2
         }
 
         .discovery-info p {
-            font-size: .72rem;
-            color: var(--text-secondary);
-            margin-top: 5px
+            margin-top: 3px;
+            font-size: .84rem;
+            color: var(--text-2)
         }
 
         .discovery-actions {
             display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 0 30px 28px
+            gap: 10px;
+            padding: 20px 32px 32px
         }
 
-        #api-key {
-            display: block
-        }
-
-        dialog#movie-modal {
-            border-radius: 10px
-        }
-
-        .modal-title {
-            font-weight: 400
-        }
-
-        .modal-actions .primary {
-            display: none
-        }
-
-        .modal-poster {
-            border-radius: 0
-        }
-
-        @media(max-width:900px) {
-            .site-header {
-                padding: 0 20px
-            }
-
-            .header-inner {
-                grid-template-columns: auto 1fr auto;
-                gap: 12px
-            }
-
-            .brand-sub {
-                display: none
-            }
-
-            main#library {
-                padding: 0 20px 56px
-            }
-
-            .site-footer {
-                padding: 36px 20px
-            }
-
-            .footer-credit {
-                flex-direction: column
-            }
-
-            .archive-intro {
-                padding: 56px 0 48px
-            }
-
-            .movie-card {
-                flex-basis: 170px
-            }
-        }
-
-        @media(max-width:680px) {
+        @media (max-width: 760px) {
             body {
-                padding-top: 60px
-            }
-
-            .site-header,
-            .header-inner {
-                height: 60px
+                padding-top: 112px
             }
 
             .site-header {
-                padding: 0 14px
+                padding: 0 18px
             }
 
             .header-inner {
-                grid-template-columns: auto auto;
-                justify-content: space-between
+                height: auto;
+                padding: 10px 0;
+                grid-template-columns: 1fr auto;
+                gap: 10px
             }
 
             .search-shell {
-                position: absolute;
-                left: 14px;
-                right: 14px;
-                top: 68px
+                grid-column: 1 / -1;
+                grid-row: 2
             }
 
-            .header-actions {
-                gap: 3px
-            }
-
-            .quiet-btn {
-                font-size: .75rem
-            }
-
-            .discover-btn {
-                padding: 8px 10px;
-                font-size: .75rem
-            }
-
-            .settings-btn {
+            .brand-sub,
+            .search-shell kbd {
                 display: none
             }
 
-            main#library {
-                padding-top: 46px
+            .sync-status {
+                right: 18px;
+                top: 118px
             }
 
-            .archive-intro {
-                padding-top: 35px
+            main#library,
+            .site-footer {
+                padding-left: 18px;
+                padding-right: 18px
             }
 
-            .archive-intro h1 {
-                font-size: 2.7rem
+            .featured {
+                grid-template-columns: 120px minmax(0, 1fr);
+                gap: 18px;
+                align-items: start;
+                padding: 20px;
+                margin-bottom: 48px
+            }
+
+            .featured h2 {
+                font-size: 1.7rem
+            }
+
+            .shelf,
+            .collection-grid {
+                grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+                column-gap: 14px
+            }
+
+            .collection-head {
+                padding: 14px 18px
+            }
+
+            .collection-grid {
+                padding: 24px 18px 60px;
+                row-gap: 26px
+            }
+
+            .modal-inner {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                padding: 28px 22px
+            }
+
+            .modal-poster {
+                width: 150px
             }
 
             .discovery-grid {
                 grid-template-columns: 1fr;
-                max-height: 65vh;
-                overflow: auto
+                gap: 20px;
+                padding: 12px 20px
             }
 
             .discovery-card {
                 display: grid;
                 grid-template-columns: 90px 1fr;
-                gap: 12px
+                gap: 14px;
+                align-items: center
             }
 
-            .discovery-poster {
-                width: 90px
+            .discovery-info {
+                margin: 0
             }
 
-            .movie-card {
-                flex-basis: 140px
-            }
-
-            .decade-title {
-                font-size: 1.8rem
+            .footer-credit {
+                flex-direction: column
             }
         }
 
-        @media(prefers-reduced-motion:reduce) {
-
-            *,
-            *::before,
-            *::after {
-                scroll-behavior: auto !important;
-                transition: none !important
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important;
+                scroll-behavior: auto !important
             }
         }
     </style>
@@ -1564,11 +1270,6 @@
     <aside id="filter-drawer" class="filter-drawer" aria-label="Menu de Filtros">
         <div class="drawer-header">
             <div class="drawer-title-wrap">
-                <div class="drawer-icon-bars">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
                 <h2 class="serif">Filtros</h2>
                 <span id="drawer-active-count" class="drawer-count-badge" style="display: none;">0 ativos</span>
             </div>
@@ -1638,6 +1339,17 @@
         </div>
     </dialog>
 
+    <dialog id="collection-modal" aria-label="Coleção completa">
+        <div class="collection-body">
+            <div class="collection-head">
+                <h2 class="serif"></h2>
+                <span class="collection-count"></span>
+                <button onclick="document.getElementById('collection-modal').close()">Voltar ao arquivo</button>
+            </div>
+            <div class="collection-grid"></div>
+        </div>
+    </dialog>
+
     <dialog id="movie-modal">
         <button class="close-btn" onclick="closeModal()">×</button>
         <div class="modal-content" id="modal-content"></div>
@@ -1700,7 +1412,7 @@
         let tmdbKey = localStorage.getItem('tmdbKey') || '';
         let cache = JSON.parse(localStorage.getItem('tmdbCache')) || {};
         let movies = [];
-        let activeFilters = { type: [], decade: [], streaming: [] };
+        let activeFilters = { type: [], decade: [], streaming: [], genre: [] };
 
         // Classificação editorial do acervo: Série, Documentário, Curta ou Filme.
         // A classificação usa os dados disponíveis do TMDB e evita depender apenas do nome do título.
@@ -1739,7 +1451,12 @@
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
+        function parseAdded(v) { if (!v) return null; const d = new Date(String(v).trim().slice(0, 10) + 'T00:00:00'); return isNaN(d) ? null : d.getTime(); }
+        function addedLabel(ts) { return ts ? new Date(ts).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : ''; }
         // CSV Parser
+        function showCsvMissing() {
+            document.getElementById('library').innerHTML = '<div class="empty-state"><strong>O arquivo ainda não chegou.</strong><span>Coloque o watchlist.csv do Letterboxd na mesma pasta do index.html e recarregue.</span></div>';
+        }
         async function loadCSV() {
             try {
                 let res = await fetch('watchlist.csv');
@@ -1747,10 +1464,10 @@
                 if (res.ok) {
                     processCSV(await res.text());
                 } else {
-                    document.getElementById('btn-upload').style.display = 'inline-block';
+                    showCsvMissing();
                 }
             } catch (e) {
-                document.getElementById('btn-upload').style.display = 'inline-block';
+                showCsvMissing();
             }
         }
 
@@ -1758,7 +1475,7 @@
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (evt) => { processCSV(evt.target.result); document.getElementById('btn-upload').style.display = 'none'; };
+            reader.onload = (evt) => { processCSV(evt.target.result); (document.getElementById('btn-upload') || { style: {} }).style.display = 'none'; };
             reader.readAsText(file);
         }
 
@@ -1778,11 +1495,12 @@
             const nameIdx = headers.indexOf('Name');
             const yearIdx = headers.indexOf('Year');
             const uriIdx = headers.indexOf('Letterboxd URI');
+            const dateIdx = headers.indexOf('Date');
 
             movies = rows.slice(1).filter(r => r[nameIdx]).map(r => {
                 const year = r[yearIdx] ? parseInt(r[yearIdx]) : null;
                 const decade = year ? `${Math.floor(year / 10) * 10}s` : 'Sem ano';
-                return { Name: r[nameIdx], Year: year, URI: r[uriIdx], Decade: decade, key: `${r[nameIdx]}-${year || ''}` };
+                return { Name: r[nameIdx], Year: year, URI: r[uriIdx], Added: parseAdded(r[dateIdx]), Decade: decade, key: `${r[nameIdx]}-${year || ''}` };
             });
             updateView();
         }
@@ -1885,7 +1603,6 @@
         function updateView() {
             renderFilters();
             renderGrid();
-            updateHeaderHeight();
         }
 
         function handleSearch(e) {
@@ -1908,6 +1625,10 @@
             }
             if (excludeCategory !== 'decade' && activeFilters.decade.length > 0) {
                 if (!activeFilters.decade.includes(m.Decade)) return false;
+            }
+            if (excludeCategory !== 'genre' && activeFilters.genre.length > 0) {
+                const g = Array.isArray(c.genres) ? c.genres : [];
+                if (!activeFilters.genre.some(x => g.includes(x))) return false;
             }
             if (excludeCategory !== 'streaming' && activeFilters.streaming.length > 0) {
                 const mStreams = getValidProviders(c.providers);
@@ -1953,7 +1674,7 @@
         }
 
         function clearAllFilters() {
-            activeFilters = { type: [], decade: [], streaming: [] };
+            activeFilters = { type: [], decade: [], streaming: [], genre: [] };
             updateView();
         }
 
@@ -1966,16 +1687,10 @@
             }
         });
 
-        function updateHeaderHeight() {
-            const h = document.querySelector('header');
-            if (h) {
-                document.body.style.paddingTop = (h.offsetHeight + 18) + 'px';
-            }
-        }
-        window.addEventListener('resize', updateHeaderHeight);
+
 
         function renderFilters() {
-            let counts = { type: { 'Filmes': 0, 'Séries': 0, 'Documentários': 0, 'Curtas': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'NetMovies': 0 } };
+            let counts = { type: { 'Filmes': 0, 'Séries': 0, 'Documentários': 0, 'Curtas': 0 }, decade: {}, genre: {}, streaming: { 'Paramount+': 0, 'NetMovies': 0 } };
 
             movies.forEach(m => {
                 const c = cache[m.key] || {};
@@ -1984,6 +1699,7 @@
 
                 if (matchExcluding(m, c, 'type')) counts.type[mType] = (counts.type[mType] || 0) + 1;
                 if (matchExcluding(m, c, 'decade')) counts.decade[m.Decade] = (counts.decade[m.Decade] || 0) + 1;
+                if (matchExcluding(m, c, 'genre')) (c.genres || []).forEach(g => counts.genre[g] = (counts.genre[g] || 0) + 1);
                 if (matchExcluding(m, c, 'streaming')) {
                     getValidProviders(c.providers).forEach(s => counts.streaming[s] = (counts.streaming[s] || 0) + 1);
                 }
@@ -2015,7 +1731,7 @@
                 if (cat === 'type') {
                     const allChip = document.createElement('div');
                     allChip.className = `chip ${activeFilters.type.length === 0 ? 'active' : ''}`;
-                    allChip.innerHTML = 'Todos';
+                    allChip.innerHTML = 'Todos'; allChip.tabIndex = 0; allChip.setAttribute('role', 'button'); allChip.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); allChip.onclick(); } };
                     allChip.onclick = () => {
                         activeFilters.type = [];
                         updateView();
@@ -2028,7 +1744,7 @@
                     const chip = document.createElement('div');
                     chip.className = `chip ${activeFilters[cat].includes(k) ? 'active' : ''}`;
                     chip.innerHTML = `${esc(k)} <span class="chip-count">(${cnt})</span>`;
-                    chip.onclick = () => toggleFilter(cat, k);
+                    chip.onclick = () => toggleFilter(cat, k); chip.tabIndex = 0; chip.setAttribute('role', 'button'); chip.setAttribute('aria-pressed', String(activeFilters[cat].includes(k))); chip.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFilter(cat, k); } };
                     row.appendChild(chip);
                 });
                 sec.appendChild(row);
@@ -2037,13 +1753,14 @@
 
             buildSection('type', 'Tipo de Conteúdo', Object.keys(counts.type), (a, b) => a.localeCompare(b));
             buildSection('streaming', 'Onde Assistir (Streaming)', Object.keys(counts.streaming), (a, b) => counts.streaming[b] - counts.streaming[a]);
+            buildSection('genre', 'Gênero', Object.keys(counts.genre), (a, b) => counts.genre[b] - counts.genre[a]);
             buildSection('decade', 'Década de Lançamento', Object.keys(counts.decade), (a, b) => {
                 if (a === 'Sem ano') return 1; if (b === 'Sem ano') return -1;
                 return parseInt(b) - parseInt(a);
             });
 
             // Atualiza badges e estados do menu hamburguer
-            const totalActive = activeFilters.type.length + activeFilters.decade.length + activeFilters.streaming.length;
+            const totalActive = activeFilters.type.length + activeFilters.decade.length + activeFilters.streaming.length + activeFilters.genre.length;
             const badge = document.getElementById('filter-badge');
             const hamburgerBtn = document.getElementById('btn-toggle-filters');
             const drawerBadge = document.getElementById('drawer-active-count');
@@ -2085,63 +1802,6 @@
             }
         }
 
-        function renderGrid() {
-            let filtered = movies.filter(m => {
-                const c = cache[m.key] || {};
-                if (searchQuery && !m.Name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-                if (!matchExcluding(m, c, 'none')) return false; // apply all
-                return true;
-            });
-
-            const main = document.getElementById('library');
-            main.innerHTML = '';
-
-            const byDec = {};
-            filtered.forEach(m => { if (!byDec[m.Decade]) byDec[m.Decade] = []; byDec[m.Decade].push(m); });
-
-            const decKeys = Object.keys(byDec).sort((a, b) => (a === 'Sem ano' ? 1 : (b === 'Sem ano' ? -1 : parseInt(b) - parseInt(a))));
-
-            decKeys.forEach(dec => {
-                byDec[dec].sort((a, b) => (a.Year || 0) - (b.Year || 0) || a.Name.localeCompare(b.Name));
-
-                let sec = document.createElement('section');
-                sec.className = 'decade-section';
-                sec.innerHTML = `<h2 class="decade-title">${dec} <span class="decade-count">${byDec[dec].length} títulos</span></h2>
-                                 <div class="shelf" id="shelf-${dec}"></div>`;
-                main.appendChild(sec);
-
-                const shelf = sec.querySelector('.shelf');
-                byDec[dec].forEach(m => {
-                    const c = cache[m.key] || (typeof UNRELEASED_MOVIES !== 'undefined' ? UNRELEASED_MOVIES[m.key] : {}) || {};
-                    const posterUrl = getPosterUrl(c.poster_path, 'w342');
-                    const noPosterHtml = `<div class="no-poster"><span class="no-poster-icon">🎬</span><span class="no-poster-title">${esc(m.Name)}</span><span class="no-poster-label">Sem pôster</span></div>`;
-                    let posterHtml = posterUrl
-                        ? `<img src="${posterUrl}" class="poster-img" loading="lazy" alt="${esc(m.Name)}" onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex');">${noPosterHtml.replace('class="no-poster"', 'class="no-poster" style="display:none;"')}`
-                        : noPosterHtml;
-
-                    const validProviders = getValidProviders(c.providers);
-                    let streamHtml = validProviders.slice(0, 2).join(', ');
-                    if (validProviders.length > 2) streamHtml += '...';
-
-                    let card = document.createElement('div');
-                    card.className = 'movie-card';
-                    card.tabIndex = 0;
-                    card.onclick = () => openModal(m.key);
-                    card.onkeydown = (e) => { if (e.key === 'Enter') openModal(m.key); };
-                    card.innerHTML = `
-                        <div class="poster-wrapper">
-                            ${posterHtml}
-                            <div class="poster-overlay">
-                                <div class="overlay-title">${esc(m.Name)}</div>
-                                <div class="overlay-year">${m.Year ? m.Year : (c.status || 'Não lançado')}</div>
-                                <div class="overlay-stream">${streamHtml}</div>
-                            </div>
-                        </div>`;
-                    shelf.appendChild(card);
-                });
-            });
-        }
-
         // Modal
         async function openModal(movieKey) {
             closeFilterDrawer();
@@ -2149,7 +1809,8 @@
             const c = cache[movieKey] || (typeof UNRELEASED_MOVIES !== 'undefined' ? UNRELEASED_MOVIES[movieKey] : {}) || {};
             const dialog = document.getElementById('movie-modal');
             renderModalContent(m, c);
-            dialog.showModal();
+            if (!dialog.open) dialog.showModal();
+            dialog.querySelector('.modal-content').scrollTop = 0;
 
             // Se for título não lançado verificado, não buscar créditos de filmes antigos no TMDB
             if (c.is_unreleased) return;
@@ -2177,6 +1838,10 @@
         }
 
         function renderModalContent(m, c) {
+            const all = m.Decade === 'Sem ano' ? [] : movies.filter(x => x.Decade === m.Decade && (x.key === m.key || (cache[x.key] || {}).poster_path)).sort((a, b) => a.key.localeCompare(b.key));
+            const at = all.findIndex(x => x.key === m.key), rel = [];
+            for (let k = 1; at > -1 && k < all.length && rel.length < 5; k++) rel.push(all[(at + k) % all.length]);
+            const relatedHtml = rel.length ? `<div class="modal-label">Da mesma década, ${esc(m.Decade)}</div><div class="related-row">${rel.map(x => `<button data-k="${esc(x.key)}" onclick="openModal(this.dataset.k)" aria-label="${esc(x.Name)}"><img src="${getPosterUrl(cache[x.key].poster_path, 'w185')}" alt=""></button>`).join('')}</div>` : '';
             let bgHtml = c.backdrop ? `<div class="modal-bg" style="background-image: url(https://image.tmdb.org/t/p/w1280${c.backdrop})"></div>` : '';
             let posterSrc = getPosterUrl(c.poster_path, 'w500') || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
@@ -2200,16 +1865,18 @@
                     <div class="modal-info">
                         <h2 class="modal-title serif">${esc(m.Name)}</h2>
                         <div class="modal-meta">${meta.join('')}</div>
+                        ${m.Added ? `<div class="modal-added">Na fila desde ${addedLabel(m.Added)}</div>` : ''}
                         ${c.synopsis ? `<div class="modal-synopsis">${esc(c.synopsis)}</div>` : ''}
                         <div class="modal-credits">
                             ${c.director ? `<div><strong>${c.type === 'movie' ? 'Direção' : 'Criação'}:</strong> ${esc(c.director)}</div>` : ''}
                             ${c.cast && c.cast.length ? `<div style="margin-top:4px"><strong>Elenco:</strong> ${esc(c.cast.join(', '))}</div>` : ''}
                         </div>
-                        <div class="stream-tags">${streams}</div>
+                        <div class="modal-label">Onde assistir no Brasil</div><div class="stream-tags">${streams}</div>
                         <div class="modal-actions">
                             ${m.URI ? `<a href="${esc(m.URI)}" target="_blank" rel="noopener noreferrer" class="letterboxd-btn">Ver no Letterboxd ↗</a>` : ''}
                             <button class="primary" onclick="sortearFilme()">Sortear outro</button>
                         </div>
+                        ${relatedHtml}
                     </div>
                 </div>`;
         }
@@ -2367,7 +2034,6 @@
 
         window.onload = () => {
             loadCSV();
-            updateHeaderHeight();
         };
 
         /* =========================================================
@@ -2406,23 +2072,29 @@
             card.tabIndex = 0;
             card.onclick = () => openModal(m.key);
             card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(m.key) } };
-            card.innerHTML = `<div class="poster-wrapper">${posterHtml}<div class="poster-overlay">
-      <div class="overlay-title">${esc(m.Name)}</div>
-      <div class="overlay-year">${esc(String(year))} · ${esc(getContentType(c))}</div>
-      ${provider ? `<div class="overlay-stream">${esc(provider)}</div>` : ''}
-      ${director ? `<div class="overlay-director">${esc(director)}</div>` : ''}
-      ${awaiting ? `<div class="overlay-waiting">Título aguardado</div>` : ''}
-    </div></div>`;
+            card.innerHTML = `<div class="poster-wrapper">${posterHtml}</div>
+      <div class="card-caption"><div class="card-title">${esc(m.Name)}</div><div class="card-meta">${esc(String(year))}${provider ? ' · <span class="on">' + esc(provider.split(' · ')[0]) + '</span>' : ''}</div></div>`;
             return card;
         }
         function addShelfSection(main, title, items, options = {}) {
             if (!items.length) return;
             const sec = document.createElement('section');
             sec.className = 'decade-section' + (options.awaiting ? ' awaiting-section' : '');
-            sec.innerHTML = `<h2 class="decade-title">${title} <span class="decade-count">${items.length} ${items.length === 1 ? 'título' : 'títulos'}</span></h2><div class="shelf"></div>`;
+            const label = `${items.length} ${items.length === 1 ? 'título' : 'títulos'}`;
+            sec.innerHTML = `<h2 class="decade-title">${title} <span class="decade-count">${label}</span>${items.length > 6 ? `<button class="see-all" aria-label="Ver todos: ${esc(title)}">Ver todos</button>` : ''}</h2><div class="shelf"></div>`;
             main.appendChild(sec);
             const shelf = sec.querySelector('.shelf');
-            items.forEach(m => shelf.appendChild(renderEditorialCard(m, !!options.awaiting)));
+            items.slice(0, 12).forEach(m => shelf.appendChild(renderEditorialCard(m, !!options.awaiting)));
+            const btn = sec.querySelector('.see-all');
+            if (btn) btn.onclick = () => openCollection(title, items, !!options.awaiting, label);
+        }
+        function openCollection(title, items, awaiting, label) {
+            const d = document.getElementById('collection-modal');
+            d.querySelector('h2').textContent = title;
+            d.querySelector('.collection-count').textContent = label;
+            const grid = d.querySelector('.collection-grid'); grid.innerHTML = '';
+            items.forEach(m => grid.appendChild(renderEditorialCard(m, awaiting)));
+            d.showModal(); d.querySelector('.collection-body').scrollTop = 0;
         }
         function renderGrid() {
             const filtered = getFilteredMovies();
@@ -2434,11 +2106,11 @@
 
             const intro = document.createElement('section');
             intro.className = 'archive-intro';
-            intro.innerHTML = `<div class="archive-kicker">Arquivo pessoal de cinema</div>
-      <h1>Filmes que quero ver,<br>descobrir e guardar.</h1>
-      <p>${total ? `<strong>${total} títulos</strong> reunidos em uma coleção particular — um arquivo em construção, organizado por tempo, curiosidade e desejo.` : 'Um arquivo em construção — filmes que ainda vão encontrar seu lugar aqui.'}</p>
-      <div class="archive-rule"></div>`;
+            intro.innerHTML = `<h1>Filmes que quero ver,<br>descobrir e guardar.</h1>
+      <p>${total ? `<strong>${total} títulos</strong> reunidos em uma coleção particular — um arquivo em construção, organizado por tempo, curiosidade e desejo.` : 'Um arquivo em construção — filmes que ainda vão encontrar seu lugar aqui.'}</p>`;
             main.appendChild(intro);
+            const quick = buildQuick(); if (quick) main.appendChild(quick);
+            const moods = buildQuickGenres(); if (moods) main.appendChild(moods);
 
             if (searchQuery && !filtered.length) {
                 const empty = document.createElement('div'); empty.className = 'empty-state';
@@ -2446,6 +2118,11 @@
                 main.appendChild(empty); return;
             }
 
+            if (!searchQuery) {
+                const f = buildFeatured(filtered); if (f) main.appendChild(f);
+                const noFilters = !activeFilters.type.length && !activeFilters.decade.length && !activeFilters.streaming.length && !activeFilters.genre.length;
+                if (noFilters) addShelfSection(main, 'Esperando há mais tempo', filtered.filter(m => m.Year && m.Added).sort((a, b) => a.Added - b.Added).slice(0, 12));
+            }
             addShelfSection(main, 'Aguardados', awaiting, { awaiting: true });
 
             const byDec = {};
@@ -2456,6 +2133,67 @@
             });
 
             updateEditorialFooter(total, decades.size, awaiting.length, filtered.length);
+        }
+        function buildQuick() {
+            const n = {};
+            movies.forEach(m => getValidProviders((cache[m.key] || {}).providers).forEach(x => n[x] = (n[x] || 0) + 1));
+            const top = Object.keys(n).sort((a, b) => n[b] - n[a]).slice(0, 6);
+            if (!top.length) return null;
+            const row = document.createElement('div'); row.className = 'quick-row';
+            row.innerHTML = '<span class="quick-label">Onde assistir</span>';
+            top.forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'chip' + (activeFilters.streaming.includes(k) ? ' active' : '');
+                b.setAttribute('aria-pressed', String(activeFilters.streaming.includes(k)));
+                b.innerHTML = `${esc(k)} <span class="chip-count">${n[k]}</span>`;
+                b.onclick = () => toggleFilter('streaming', k);
+                row.appendChild(b);
+            });
+            return row;
+        }
+        function buildQuickGenres() {
+            const n = {};
+            movies.forEach(m => ((cache[m.key] || {}).genres || []).forEach(g => n[g] = (n[g] || 0) + 1));
+            const top = Object.keys(n).sort((a, b) => n[b] - n[a]).slice(0, 8);
+            if (!top.length) return null;
+            const row = document.createElement('div'); row.className = 'quick-row';
+            row.innerHTML = '<span class="quick-label">No clima de</span>';
+            top.forEach(k => {
+                const on = activeFilters.genre.includes(k);
+                const b = document.createElement('button');
+                b.className = 'chip' + (on ? ' active' : ''); b.setAttribute('aria-pressed', String(on));
+                b.innerHTML = `${esc(k)} <span class="chip-count">${n[k]}</span>`;
+                b.onclick = () => toggleFilter('genre', k);
+                row.appendChild(b);
+            });
+            return row;
+        }
+        let featuredShift = 0;
+        function pickFeatured(list) {
+            const ok = m => m.Year && (cache[m.key] || {}).poster_path;
+            const onStream = list.filter(m => ok(m) && getValidProviders(cache[m.key].providers).length);
+            const pool = (onStream.length ? onStream : list.filter(ok)).sort((a, b) => a.key.localeCompare(b.key));
+            if (!pool.length) return null;
+            const d = new Date(), seed = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
+            return pool[(seed * 7919 + featuredShift) % pool.length];
+        }
+        function buildFeatured(list) {
+            const m = pickFeatured(list); if (!m) return null;
+            const c = cache[m.key] || {}, providers = getValidProviders(c.providers);
+            const run = c.runtime ? `${Math.floor(c.runtime / 60)}h ${c.runtime % 60}min` : '';
+            const meta = [m.Year, c.director, run, getContentType(c)].filter(Boolean).map(x => `<span>${esc(String(x))}</span>`).join('');
+            const sec = document.createElement('section');
+            sec.className = 'featured'; sec.id = 'featured'; sec.style.setProperty('--poster', `url(${getPosterUrl(c.poster_path, 'w185')})`); sec.setAttribute('aria-label', 'Sugestão para esta noite');
+            sec.innerHTML = `<button class="featured-poster" aria-label="Abrir ${esc(m.Name)}"><img src="${getPosterUrl(c.poster_path, 'w500')}" alt=""></button>
+      <div class="featured-text"><div class="featured-label">Para esta noite</div><h2>${esc(m.Name)}</h2>
+      <div class="featured-meta">${meta}</div>
+      ${m.Added ? `<div class="featured-added">Na fila desde ${addedLabel(m.Added)}</div>` : ''}
+      <div class="stream-tags">${providers.length ? providers.map(x => `<span class="stream-tag">${esc(x)}</span>`).join('') : '<span class="stream-none">Fora dos streamings por assinatura no Brasil</span>'}</div>
+      <div class="featured-actions"><button class="primary" data-open>Abrir ficha</button><button data-next>Outra sugestão</button></div></div>`;
+            sec.querySelector('.featured-poster').onclick = () => openModal(m.key);
+            sec.querySelector('[data-open]').onclick = () => openModal(m.key);
+            sec.querySelector('[data-next]').onclick = () => { featuredShift++; const n = buildFeatured(list); if (n) sec.replaceWith(n); };
+            return sec;
         }
         function updateEditorialFooter(total, decades, awaiting, shown) {
             const el = document.getElementById('footer-stats');
@@ -2480,7 +2218,7 @@
                 const card = document.createElement('article'); card.className = 'discovery-card'; card.onclick = () => { closeDiscovery(); openModal(m.key) };
                 const poster = getPosterUrl(c.poster_path, 'w500');
                 card.innerHTML = `<div class="discovery-poster">${poster ? `<img src="${poster}" alt="${esc(m.Name)}">` : `<div class="no-poster"><span class="no-poster-title">${esc(m.Name)}</span><span class="no-poster-label">Sem pôster</span></div>`}</div>
-      <div class="discovery-info"><h3 class="serif">${esc(m.Name)}</h3><p>${esc(String(m.Year || c.status || 'Aguardado'))}${c.director ? ' · ' + esc(c.director) : ''}</p></div>`;
+      <div class="discovery-info"><h3 class="serif">${esc(m.Name)}</h3><p>${esc(String(m.Year || c.status || 'Aguardado'))}${c.director ? ' · ' + esc(c.director) : ''}${m.Added ? ' · na fila desde ' + esc(addedLabel(m.Added)) : ''}</p></div>`;
                 grid.appendChild(card);
             });
         }
