@@ -1,0 +1,243 @@
+// Gerado a partir das mesmas regras do index.html. Roda no GitHub Actions toda semana.
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const tmdbKey = (process.env.TMDB_KEY || '').trim();
+if (!tmdbKey) { console.error('Faltou o segredo TMDB_KEY.'); process.exit(1); }
+
+let UNRELEASED_MOVIES = {};
+try { UNRELEASED_MOVIES = vm.runInNewContext(fs.readFileSync('unreleased_movies.js', 'utf8') + '\n;UNRELEASED_MOVIES'); } catch (e) { console.warn('Sem unreleased_movies.js'); }
+
+const RULES = {
+            exclude: [
+                'Looke',
+                'MUBI',
+                'Oldflix',
+                'Belas Artes à la carte',
+                'Belas Artes A La Carte',
+                'Belas à la carte',
+                'Belas a la carte',
+                'Filmicca',
+                'FILMICCA',
+                'Paramount Plus Premium',
+                'Paramount+ Premium',
+                'Artiflix',
+                'ARTIFLIX',
+                'Claro video',
+                'Claro Video',
+                'Claro tv+',
+                'Adrenalina Pura Amazon Channel',
+                'Adrenalina Pura Apple TV Channel',
+                'DocAlliance Films',
+                'DocAlliance',
+                'Bloodstream',
+                'Cultpix',
+                'Artfify',
+                'Artify',
+                'Crunchyroll',
+                'Crunchyrool',
+                'Univer Video',
+                'Gospel Play',
+                'Sun Nxt',
+                'Sun NXT',
+                'Amazon Video',
+                'Paramount Plus Apple TV Channel',
+                'Kocowa',
+                'KOCOWA+',
+                'Mercado Play',
+                'Reserva Imovision',
+                'Reserva Imovisión',
+                'Imovision'
+            ],
+            excludeSuffixes: [
+                'Amazon Channel',
+                'Apple TV Channel'
+            ],
+            rename: {
+                'Paramount Plus': 'Paramount+',
+                'Net Movies': 'NetMovies'
+            }
+        };
+
+let cache = {};
+try { cache = JSON.parse(fs.readFileSync('streaming.json', 'utf8')).items || {}; } catch (e) { }
+
+function cleanProvider(name) {
+            if (!name) return '';
+            let clean = name.trim().replace(/ (with Ads|Standard with Ads)$/i, '');
+            if (RULES.rename[clean]) clean = RULES.rename[clean];
+            const lower = clean.toLowerCase();
+            if (lower === 'netmovies' || lower === 'net movies') clean = 'NetMovies';
+            return clean;
+        }
+
+function isValidProvider(name) {
+            if (!name) return false;
+            const norm = name.trim().toLowerCase();
+
+            // Excluir qualquer canal Amazon Channel ou Apple TV Channel (case-insensitive)
+            for (const suffix of RULES.excludeSuffixes) {
+                if (norm.endsWith(suffix.toLowerCase())) return false;
+            }
+
+            // Exclusão específica para Mercado Play
+            if (norm === 'mercado play') return false;
+
+            // Exclusão para Reserva Imovision
+            if (norm.includes('imovision') || norm.includes('imovisión')) return false;
+
+            // Exclusão específica para Amazon Video (mantém Amazon Prime Video / Prime Video)
+            if (norm === 'amazon video') return false;
+
+            // Exclusão para Belas à la carte (variações com/sem acento e termos)
+            if (norm.includes('belas') && (norm.includes('carte') || norm.includes('artes'))) return false;
+
+            // Exclusão para Paramount Premium (mantém Paramount+)
+            if (norm.includes('paramount') && norm.includes('premium')) return false;
+
+            // Exclusão para Claro video / Claro tv+
+            if (norm.startsWith('claro')) return false;
+
+            // Exclusão para Crunchyroll / Crunchyrool
+            if (norm.startsWith('crunchyro')) return false;
+
+            // Exclusão para Artiflix / Artfify / Artify
+            if (norm === 'artiflix' || norm === 'artfify' || norm === 'artify') return false;
+
+            // Verificar lista de exclusão geral (case-insensitive)
+            return !RULES.exclude.some(ex => ex.toLowerCase() === norm);
+        }
+
+function getValidProviders(providers) {
+            if (!providers || !Array.isArray(providers)) return [];
+            return [...new Set(providers.map(cleanProvider).filter(isValidProvider))];
+        }
+
+function getHeaders() {
+            let h = { 'accept': 'application/json' };
+            if (tmdbKey.length > 50) h['Authorization'] = `Bearer ${tmdbKey}`;
+            return h;
+        }
+
+function getQuery() { return tmdbKey.length <= 50 && tmdbKey ? `api_key=${tmdbKey}&` : ''; }
+
+async function processMovie(m) {
+            try {
+                // Se for um título não lançado conhecido, preservar os dados verificados
+                if (!m.Year && typeof UNRELEASED_MOVIES !== 'undefined' && UNRELEASED_MOVIES[m.key]) {
+                    cache[m.key] = {
+                        ...UNRELEASED_MOVIES[m.key],
+                        last_sync: Date.now()
+                    };
+                    return true;
+                }
+
+                // 1. Search
+                let q = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
+                if (m.Year) q += `&year=${m.Year}`;
+                let res = await fetch(`${TMDB_BASE}/search/movie?${getQuery()}${q}`, { headers: getHeaders() });
+                let data = await res.json();
+                let item = data.results?.[0];
+                let type = 'movie';
+
+                // Se o filme no CSV não tem ano, rejeitar correspondência com clássico antigo lançado antes de 2025
+                if (!m.Year && item && item.release_date) {
+                    const relYear = parseInt(item.release_date.substring(0, 4));
+                    if (relYear < 2025) {
+                        item = null;
+                    }
+                }
+
+                if (!item) {
+                    let qTv = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
+                    if (m.Year) qTv += `&first_air_date_year=${m.Year}`;
+                    res = await fetch(`${TMDB_BASE}/search/tv?${getQuery()}${qTv}`, { headers: getHeaders() });
+                    data = await res.json();
+                    item = data.results?.[0];
+                    type = 'tv';
+                }
+
+                if (!item) { cache[m.key] = { last_sync: Date.now(), not_found: true }; return false; }
+
+                // 2. Fetch providers & poster
+                let origLang = item.original_language || 'en';
+                res = await fetch(`${TMDB_BASE}/${type}/${item.id}?${getQuery()}append_to_response=watch/providers,images&language=pt-BR&include_image_language=${origLang},null`, { headers: getHeaders() });
+                let details = await res.json();
+
+                let providers = [];
+                let br = details['watch/providers']?.results?.BR;
+                if (br) {
+                    const checkList = (list, isAdOrFree) => {
+                        if (!list || !Array.isArray(list)) return;
+                        list.forEach(p => {
+                            if (!p || !p.provider_name) return;
+                            const clean = cleanProvider(p.provider_name);
+                            if (isAdOrFree) {
+                                // Aceita NetMovies caso venha em ads ou free
+                                if ((clean.toLowerCase() === 'netmovies' || clean.toLowerCase() === 'net movies') && isValidProvider(clean)) {
+                                    providers.push('NetMovies');
+                                }
+                            } else {
+                                if (isValidProvider(clean)) providers.push(clean);
+                            }
+                        });
+                    };
+
+                    checkList(br.flatrate, false);
+                    checkList(br.ads, true);
+                    checkList(br.free, true);
+                }
+                providers = [...new Set(providers)];
+
+                let poster = details.poster_path;
+                if (details.images && details.images.posters) {
+                    let pOrig = details.images.posters.find(x => x.iso_639_1 === origLang);
+                    if (pOrig) poster = pOrig.file_path;
+                }
+
+                const prev = cache[m.key];
+                cache[m.key] = {
+                    id: item.id,
+                    arrived: (prev && prev.last_sync && !(prev.providers || []).length && providers.length) ? Date.now() : ((prev && prev.arrived) || 0),
+                    type,
+                    poster_path: poster,
+                    orig_lang: origLang,
+                    providers,
+                    runtime: details.runtime || 0,
+                    seasons: details.number_of_seasons || 0,
+                    genres: (details.genres || []).map(g => g.name),
+                    last_sync: Date.now()
+                };
+                return true;
+            } catch (e) { return false; }
+        }
+
+function parseCSV(text) {
+  const rows = []; let row = [], val = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i + 1];
+    if (c === '"' && inQ && n === '"') { val += '"'; i++; }
+    else if (c === '"') inQ = !inQ;
+    else if (c === ',' && !inQ) { row.push(val); val = ''; }
+    else if (c === '\n' && !inQ) { row.push(val); rows.push(row); row = []; val = ''; }
+    else if (c !== '\r') val += c;
+  }
+  if (val || row.length) { row.push(val); rows.push(row); }
+  const h = rows[0].map(x => x.trim()), ni = h.indexOf('Name'), yi = h.indexOf('Year');
+  return rows.slice(1).filter(r => r[ni]).map(r => { const y = r[yi] ? parseInt(r[yi]) : null; return { Name: r[ni], Year: y, key: `${r[ni]}-${y || ''}` }; });
+}
+
+const file = fs.existsSync('watchlist.csv') ? 'watchlist.csv' : fs.readdirSync('.').find(f => /^watchlist.*\.csv$/.test(f));
+const movies = parseCSV(fs.readFileSync(file, 'utf8'));
+console.log(`${movies.length} títulos em ${file}`);
+
+let fails = 0, idx = 0;
+await Promise.all(Array.from({ length: 6 }, async () => {
+  while (idx < movies.length) { const m = movies[idx++]; if (!(await processMovie(m))) fails++; }
+}));
+
+const items = {};
+for (const m of movies) if (cache[m.key]) items[m.key] = cache[m.key];
+fs.writeFileSync('streaming.json', JSON.stringify({ updated: Date.now(), items }));
+console.log(`Pronto. Falhas: ${fails}`);
