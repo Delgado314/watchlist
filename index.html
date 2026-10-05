@@ -2017,8 +2017,10 @@
                     if (pOrig) poster = pOrig.file_path;
                 }
 
+                const prev = cache[m.key];
                 cache[m.key] = {
                     id: item.id,
+                    arrived: (prev && prev.last_sync && !(prev.providers || []).length && providers.length) ? Date.now() : ((prev && prev.arrived) || 0),
                     type,
                     poster_path: poster,
                     orig_lang: origLang,
@@ -2032,8 +2034,17 @@
             } catch (e) { return false; }
         }
 
+        async function loadRemote() {
+            try {
+                const r = await fetch('streaming.json', { cache: 'no-store' });
+                if (!r.ok) return;
+                const d = await r.json();
+                for (const k in d.items || {}) cache[k] = { ...(cache[k] || {}), ...d.items[k] };
+                sanitizeCache();
+            } catch (e) { }
+        }
         window.onload = () => {
-            loadCSV();
+            loadRemote().then(loadCSV).then(() => { if (tmdbKey) syncStreamings(); });
         };
 
         /* =========================================================
@@ -2121,6 +2132,7 @@
             if (!searchQuery) {
                 const f = buildFeatured(filtered); if (f) main.appendChild(f);
                 const noFilters = !activeFilters.type.length && !activeFilters.decade.length && !activeFilters.streaming.length && !activeFilters.genre.length;
+                if (noFilters) addShelfSection(main, 'Chegaram ao streaming', filtered.filter(m => (cache[m.key] || {}).arrived && Date.now() - cache[m.key].arrived < 30 * 864e5).sort((a, b) => cache[b.key].arrived - cache[a.key].arrived));
                 if (noFilters) addShelfSection(main, 'Esperando há mais tempo', filtered.filter(m => m.Year && m.Added).sort((a, b) => a.Added - b.Added).slice(0, 12));
             }
             addShelfSection(main, 'Aguardados', awaiting, { awaiting: true });
@@ -2195,10 +2207,16 @@
             sec.querySelector('[data-next]').onclick = () => { featuredShift++; const n = buildFeatured(list); if (n) sec.replaceWith(n); };
             return sec;
         }
+        function syncAge() {
+            const t = Math.max(0, ...Object.values(cache).map(c => (c && c.last_sync) || 0));
+            if (!t) return '';
+            const d = Math.floor((Date.now() - t) / 864e5);
+            return ` <span>·</span> streaming atualizado ${d < 1 ? 'hoje' : d === 1 ? 'ontem' : 'há ' + d + ' dias'}`;
+        }
         function updateEditorialFooter(total, decades, awaiting, shown) {
             const el = document.getElementById('footer-stats');
             if (!el) return;
-            el.innerHTML = `<b>${total}</b> títulos <span>·</span> <b>${decades}</b> décadas <span>·</span> <b>${awaiting}</b> aguardados <span>·</span> ${shown === total ? 'acervo completo' : shown + ' encontrados'}`;
+            el.innerHTML = `<b>${total}</b> títulos <span>·</span> <b>${decades}</b> décadas <span>·</span> <b>${awaiting}</b> aguardados <span>·</span> ${shown === total ? 'acervo completo' : shown + ' encontrados'}${syncAge()}`;
         }
         function openDiscovery() {
             closeFilterDrawer();
