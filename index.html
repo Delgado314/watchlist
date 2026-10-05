@@ -886,6 +886,7 @@
         <div class="modal-content" id="modal-content"></div>
     </dialog>
 
+    <script src="unreleased_movies.js"></script>
     <script>
         const TMDB_BASE = 'https://api.themoviedb.org/3';
         const RULES = {
@@ -1065,8 +1066,31 @@
             return [...new Set(providers.map(cleanProvider).filter(isValidProvider))];
         }
 
+        function getPosterUrl(path, size = 'w342') {
+            if (!path) return '';
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            return `https://image.tmdb.org/t/p/${size}${path}`;
+        }
+
         function sanitizeCache() {
             let changed = false;
+
+            // Sincronizar dados verificados dos títulos não lançados
+            if (typeof UNRELEASED_MOVIES !== 'undefined') {
+                for (const key in UNRELEASED_MOVIES) {
+                    const unreleased = UNRELEASED_MOVIES[key];
+                    const existing = cache[key] || {};
+                    // Se não existe ou se foi incorretamente associado a um filme antigo já lançado
+                    if (!cache[key] || !existing.is_unreleased) {
+                        cache[key] = {
+                            ...unreleased,
+                            last_sync: Date.now()
+                        };
+                        changed = true;
+                    }
+                }
+            }
+
             for (const key in cache) {
                 if (cache[key] && Array.isArray(cache[key].providers)) {
                     const original = cache[key].providers;
@@ -1303,9 +1327,10 @@
 
                 const shelf = sec.querySelector('.shelf');
                 byDec[dec].forEach(m => {
-                    const c = cache[m.key] || {};
-                    let posterHtml = c.poster_path
-                        ? `<img src="https://image.tmdb.org/t/p/w342${c.poster_path}" class="poster-img" loading="lazy" alt="${esc(m.Name)}">`
+                    const c = cache[m.key] || (typeof UNRELEASED_MOVIES !== 'undefined' ? UNRELEASED_MOVIES[m.key] : {}) || {};
+                    const posterUrl = getPosterUrl(c.poster_path, 'w342');
+                    let posterHtml = posterUrl
+                        ? `<img src="${posterUrl}" class="poster-img" loading="lazy" alt="${esc(m.Name)}">`
                         : `<div class="no-poster">${esc(m.Name)}</div>`;
 
                     const validProviders = getValidProviders(c.providers);
@@ -1322,7 +1347,7 @@
                             ${posterHtml}
                             <div class="poster-overlay">
                                 <div class="overlay-title">${esc(m.Name)}</div>
-                                <div class="overlay-year">${m.Year || ''}</div>
+                                <div class="overlay-year">${m.Year ? m.Year : (c.status || 'Não lançado')}</div>
                                 <div class="overlay-stream">${streamHtml}</div>
                             </div>
                         </div>`;
@@ -1335,10 +1360,13 @@
         async function openModal(movieKey) {
             closeFilterDrawer();
             const m = movies.find(x => x.key === movieKey);
-            const c = cache[movieKey] || {};
+            const c = cache[movieKey] || (typeof UNRELEASED_MOVIES !== 'undefined' ? UNRELEASED_MOVIES[movieKey] : {}) || {};
             const dialog = document.getElementById('movie-modal');
             renderModalContent(m, c);
             dialog.showModal();
+
+            // Se for título não lançado verificado, não buscar créditos de filmes antigos no TMDB
+            if (c.is_unreleased) return;
 
             if (c.id && !c.creditsFetched) {
                 try {
@@ -1360,10 +1388,11 @@
 
         function renderModalContent(m, c) {
             let bgHtml = c.backdrop ? `<div class="modal-bg" style="background-image: url(https://image.tmdb.org/t/p/w1280${c.backdrop})"></div>` : '';
-            let posterSrc = c.poster_path ? `https://image.tmdb.org/t/p/w500${c.poster_path}` : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            let posterSrc = getPosterUrl(c.poster_path, 'w500') || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
             let meta = [];
             if (m.Year) meta.push(`<span>${m.Year}</span>`);
+            else meta.push(`<span style="color:var(--gold); font-weight:600">${c.status || 'Não lançado / Em desenvolvimento'}</span>`);
             if (c.runtime) meta.push(`<span>${Math.floor(c.runtime / 60)}h ${c.runtime % 60}min</span>`);
             if (c.seasons) meta.push(`<span>${c.seasons} temporada${c.seasons > 1 ? 's' : ''}</span>`);
             if (c.genres && c.genres.length) meta.push(`<span>${esc(c.genres.join(', '))}</span>`);
@@ -1371,7 +1400,7 @@
             const validProviders = getValidProviders(c.providers);
             let streams = (validProviders.length > 0)
                 ? validProviders.map(s => `<span class="stream-tag">${esc(s)}</span>`).join('')
-                : `<span class="stream-none">Fora dos streamings por assinatura no Brasil</span>`;
+                : `<span class="stream-none">${!m.Year ? 'Filme ainda não lançado' : 'Fora dos streamings por assinatura no Brasil'}</span>`;
 
             document.getElementById('modal-content').innerHTML = `
                 ${bgHtml}
@@ -1458,6 +1487,15 @@
 
         async function processMovie(m) {
             try {
+                // Se for um título não lançado conhecido, preservar os dados verificados
+                if (!m.Year && typeof UNRELEASED_MOVIES !== 'undefined' && UNRELEASED_MOVIES[m.key]) {
+                    cache[m.key] = {
+                        ...UNRELEASED_MOVIES[m.key],
+                        last_sync: Date.now()
+                    };
+                    return true;
+                }
+
                 // 1. Search
                 let q = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
                 if (m.Year) q += `&year=${m.Year}`;
@@ -1465,6 +1503,14 @@
                 let data = await res.json();
                 let item = data.results?.[0];
                 let type = 'movie';
+
+                // Se o filme no CSV não tem ano, rejeitar correspondência com clássico antigo lançado antes de 2025
+                if (!m.Year && item && item.release_date) {
+                    const relYear = parseInt(item.release_date.substring(0, 4));
+                    if (relYear < 2025) {
+                        item = null;
+                    }
+                }
 
                 if (!item) {
                     let qTv = `query=${encodeURIComponent(m.Name)}&language=pt-BR`;
