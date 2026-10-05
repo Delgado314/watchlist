@@ -733,7 +733,36 @@
             margin-top: auto;
             padding-top: 24px;
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .letterboxd-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 8px 14px;
+            border: 1px solid var(--line-medium);
+            border-radius: 3px;
+            background: transparent;
+            color: var(--text-primary);
+            font: 600 .78rem 'DM Sans', sans-serif;
+            letter-spacing: .01em;
+            text-decoration: none;
+            transition: color .12s, background .12s, border-color .12s;
+        }
+
+        .letterboxd-btn:hover {
+            color: var(--gold);
+            background: var(--bg-secondary);
+            border-color: var(--gold);
+        }
+
+        .letterboxd-btn:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
         }
 
         .close-btn {
@@ -2139,7 +2168,7 @@
                         </div>
                         <div class="stream-tags">${streams}</div>
                         <div class="modal-actions">
-                            <a href="${m.URI}" target="_blank" class="btn" style="text-decoration:none">Ver no Letterboxd</a>
+                            ${m.URI ? `<a href="${esc(m.URI)}" target="_blank" rel="noopener noreferrer" class="letterboxd-btn">Ver no Letterboxd ↗</a>` : ''}
                             <button class="primary" onclick="sortearFilme()">Sortear outro</button>
                         </div>
                     </div>
