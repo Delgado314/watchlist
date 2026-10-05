@@ -923,14 +923,16 @@
                 'Amazon Video',
                 'Paramount Plus Apple TV Channel',
                 'Kocowa',
-                'KOCOWA+'
+                'KOCOWA+',
+                'Mercado Play'
             ],
             excludeSuffixes: [
                 'Amazon Channel',
                 'Apple TV Channel'
             ],
             rename: {
-                'Paramount Plus': 'Paramount+'
+                'Paramount Plus': 'Paramount+',
+                'Net Movies': 'NetMovies'
             }
         };
 
@@ -1013,7 +1015,8 @@
             if (!name) return '';
             let clean = name.trim().replace(/ (with Ads|Standard with Ads)$/i, '');
             if (RULES.rename[clean]) clean = RULES.rename[clean];
-            if (clean.toLowerCase() === 'mercado play') clean = 'Mercado Play';
+            const lower = clean.toLowerCase();
+            if (lower === 'netmovies' || lower === 'net movies') clean = 'NetMovies';
             return clean;
         }
 
@@ -1025,6 +1028,9 @@
             for (const suffix of RULES.excludeSuffixes) {
                 if (norm.endsWith(suffix.toLowerCase())) return false;
             }
+
+            // Exclusão específica para Mercado Play
+            if (norm === 'mercado play') return false;
 
             // Exclusão específica para Amazon Video (mantém Amazon Prime Video / Prime Video)
             if (norm === 'amazon video') return false;
@@ -1167,7 +1173,7 @@
         window.addEventListener('resize', updateHeaderHeight);
 
         function renderFilters() {
-            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'Mercado Play': 0 } };
+            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'NetMovies': 0 } };
 
             movies.forEach(m => {
                 const c = cache[m.key] || {};
@@ -1187,7 +1193,7 @@
 
             const buildSection = (cat, title, items, sortFn) => {
                 const sortedItems = items.sort(sortFn);
-                const validItems = sortedItems.filter(k => (counts[cat][k] || 0) > 0 || k === 'Paramount+' || k === 'Mercado Play');
+                const validItems = sortedItems.filter(k => (counts[cat][k] || 0) > 0 || k === 'Paramount+' || k === 'NetMovies');
                 if (validItems.length === 0) return;
 
                 const sec = document.createElement('div');
@@ -1479,9 +1485,9 @@
                             if (!p || !p.provider_name) return;
                             const clean = cleanProvider(p.provider_name);
                             if (isAdOrFree) {
-                                // Aceita Mercado Play (e outros serviços livres desejados) caso venha em ads ou free
-                                if (clean.toLowerCase() === 'mercado play' && isValidProvider(clean)) {
-                                    providers.push('Mercado Play');
+                                // Aceita NetMovies caso venha em ads ou free
+                                if ((clean.toLowerCase() === 'netmovies' || clean.toLowerCase() === 'net movies') && isValidProvider(clean)) {
+                                    providers.push('NetMovies');
                                 }
                             } else {
                                 if (isValidProvider(clean)) providers.push(clean);
