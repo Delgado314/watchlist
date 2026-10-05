@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca de Filmes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-color: #15110d;
@@ -17,161 +19,550 @@
             --gold: #d1a954;
             --wood: #4a3623;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.5;
-            padding-top: 240px; 
+            padding-top: 240px;
         }
-        h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 700; }
-        
+
+        h1,
+        h2,
+        h3,
+        .serif {
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 700;
+        }
+
         header {
-            position: fixed; top: 0; left: 0; right: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             background-color: rgba(21, 17, 13, 0.95);
             backdrop-filter: blur(10px);
             z-index: 100;
             border-bottom: 1px solid var(--line-color);
             padding: 16px 24px;
-            display: flex; flex-direction: column; gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-        .header-top h1 { font-size: 1.8rem; color: var(--gold); }
-        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        
-        input[type="text"], input[type="password"] {
-            background: var(--surface-color); border: 1px solid var(--line-color);
-            color: var(--text-main); padding: 8px 12px; border-radius: 4px; outline: none;
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        input[type="text"]:focus, input[type="password"]:focus { border-color: var(--gold); }
-        
+
+        .header-top h1 {
+            font-size: 1.8rem;
+            color: var(--gold);
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            background: var(--surface-color);
+            border: 1px solid var(--line-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--gold);
+        }
+
         button {
-            background: var(--surface-color); color: var(--text-main);
-            border: 1px solid var(--line-color); padding: 8px 12px;
-            border-radius: 4px; cursor: pointer; transition: all 0.2s; font-family: inherit;
+            background: var(--surface-color);
+            color: var(--text-main);
+            border: 1px solid var(--line-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
         }
-        button:hover { background: var(--line-color); }
-        button.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
-        button.primary:hover { background: #e2c073; }
 
-        .filters-container { display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto; padding-right: 8px;}
-        .filters-container::-webkit-scrollbar { width: 6px; }
-        .filters-container::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 3px; }
-        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        button:hover {
+            background: var(--line-color);
+        }
+
+        button.primary {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+            font-weight: bold;
+        }
+
+        button.primary:hover {
+            background: #e2c073;
+        }
+
+        .filters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .filters-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filters-container::-webkit-scrollbar-thumb {
+            background: var(--line-color);
+            border-radius: 3px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
         .chip {
-            background: var(--surface-color); border: 1px solid var(--line-color);
-            padding: 4px 12px; border-radius: 16px; font-size: 0.85rem;
-            cursor: pointer; user-select: none; transition: background 0.2s;
+            background: var(--surface-color);
+            border: 1px solid var(--line-color);
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
         }
-        .chip:hover { background: var(--line-color); }
-        .chip.active { background: var(--gold); color: #000; border-color: var(--gold); }
-        .chip-count { opacity: 0.7; margin-left: 4px; font-size: 0.9em; }
 
-        main { padding: 24px; max-width: 1400px; margin: 0 auto; }
-        .decade-section { margin-bottom: 56px; content-visibility: auto; contain-intrinsic-size: 800px; }
+        .chip:hover {
+            background: var(--line-color);
+        }
+
+        .chip.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        .chip-count {
+            opacity: 0.7;
+            margin-left: 4px;
+            font-size: 0.9em;
+        }
+
+        main {
+            padding: 24px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .decade-section {
+            margin-bottom: 56px;
+            content-visibility: auto;
+            contain-intrinsic-size: 400px;
+        }
+
         .decade-title {
-            font-size: 2rem; border-bottom: 2px solid var(--line-color);
-            padding-bottom: 8px; margin-bottom: 24px; display: flex; align-items: baseline; gap: 12px;
+            font-size: 2rem;
+            border-bottom: 2px solid var(--line-color);
+            padding-bottom: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
         }
-        .decade-count { font-size: 1rem; color: var(--text-sec); font-family: system-ui, sans-serif; font-weight: normal; }
-        .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 28px 20px; }
 
-        .movie-card { position: relative; cursor: pointer; outline: none; border-radius: 4px; display: block; }
-        .movie-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+        .decade-count {
+            font-size: 1rem;
+            color: var(--text-sec);
+            font-family: system-ui, sans-serif;
+            font-weight: normal;
+        }
+
+        /* Layout em Carrossel Horizontal */
+        .shelf {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+            padding: 10px 0 24px 0;
+            scroll-behavior: smooth;
+        }
+
+        .shelf::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .shelf::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .shelf::-webkit-scrollbar-thumb {
+            background: var(--line-color);
+            border-radius: 4px;
+        }
+
+        .shelf::-webkit-scrollbar-thumb:hover {
+            background: var(--text-sec);
+        }
+
+        .movie-card {
+            flex: 0 0 180px;
+            /* Largura fixa para manter o carrossel uniforme */
+            position: relative;
+            cursor: pointer;
+            outline: none;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .movie-card:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 4px;
+        }
+
         .poster-wrapper {
-            position: relative; width: 100%; aspect-ratio: 2 / 3;
-            background: var(--surface-color); border-radius: 4px;
-            box-shadow: 0 5px 0 var(--wood), 0 8px 10px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease; overflow: hidden;
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            background: var(--surface-color);
+            border-radius: 4px;
+            box-shadow: 0 5px 0 var(--wood), 0 8px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            overflow: hidden;
         }
-        .movie-card:hover .poster-wrapper, .movie-card:focus-visible .poster-wrapper { transform: translateY(-8px); }
-        .poster-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .no-poster { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; color: var(--text-sec); font-size: 0.9rem; }
 
-        .poster-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(21,17,13,0.98) 0%, rgba(21,17,13,0.6) 50%, transparent 100%);
-            opacity: 0; transition: opacity 0.3s;
-            display: flex; flex-direction: column; justify-content: flex-end; padding: 12px;
+        .movie-card:hover .poster-wrapper,
+        .movie-card:focus-visible .poster-wrapper {
+            transform: translateY(-8px);
         }
-        .movie-card:hover .poster-overlay, .movie-card:focus-visible .poster-overlay { opacity: 1; }
-        .overlay-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; text-shadow: 1px 1px 2px #000; line-height: 1.2; }
-        .overlay-year { font-size: 0.8rem; color: var(--gold); margin-bottom: 4px; }
-        .overlay-stream { font-size: 0.75rem; color: var(--text-sec); line-height: 1.3; }
+
+        .poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .no-poster {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 12px;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+        }
+
+        /* Overlay sempre visível com o estilo da imagem de referência */
+        .poster-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 8, 6, 1) 0%, rgba(10, 8, 6, 0.85) 25%, transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px 12px 12px 12px;
+            pointer-events: none;
+        }
+
+        .overlay-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            margin-bottom: 6px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 0px 0px 8px rgba(0, 0, 0, 0.8);
+            line-height: 1.15;
+        }
+
+        .overlay-year {
+            font-size: 0.9rem;
+            color: var(--gold);
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .overlay-stream {
+            font-size: 0.85rem;
+            color: #b0a595;
+            line-height: 1.3;
+        }
 
         dialog {
-            margin: auto; max-width: 900px; width: 90%; background: var(--bg-color); color: var(--text-main);
-            border: 1px solid var(--line-color); border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            padding: 0; overflow: hidden;
+            margin: auto;
+            max-width: 900px;
+            width: 90%;
+            background: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--line-color);
+            border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            padding: 0;
+            overflow: hidden;
         }
-        dialog::backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
-        .modal-content { position: relative; display: flex; min-height: 450px; }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            display: flex;
+            min-height: 450px;
+        }
+
         .modal-bg {
-            position: absolute; inset: 0; z-index: 0; opacity: 0.25;
-            background-size: cover; background-position: center top;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.25;
+            background-size: cover;
+            background-position: center top;
             mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
             -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
             filter: blur(6px);
         }
-        .modal-inner { position: relative; z-index: 1; display: flex; gap: 32px; padding: 40px; width: 100%; flex-wrap: wrap; }
-        .modal-poster { flex-shrink: 0; width: 280px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); aspect-ratio: 2/3; object-fit: cover;}
-        .modal-info { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 12px; }
-        .modal-title { font-size: 2.5rem; color: var(--gold); line-height: 1.1; margin-bottom: 4px; }
-        .modal-meta { color: var(--text-sec); font-size: 0.95rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
-        .modal-meta span::after { content: "·"; margin-left: 8px; }
-        .modal-meta span:last-child::after { content: ""; }
-        .modal-synopsis { margin-top: 12px; font-size: 1rem; line-height: 1.6; }
-        .modal-credits { margin-top: 16px; font-size: 0.95rem; color: var(--text-sec); line-height: 1.5;}
-        .modal-credits strong { color: var(--text-main); }
-        .stream-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
-        .stream-tag { background: rgba(209, 169, 84, 0.1); color: var(--gold); border: 1px solid var(--gold); padding: 6px 14px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;}
-        .stream-none { color: var(--text-sec); border: 1px solid var(--line-color); padding: 6px 14px; border-radius: 4px; font-size: 0.85rem;}
-        
-        .modal-actions { margin-top: auto; padding-top: 24px; display: flex; gap: 12px; }
-        .close-btn {
-            position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.6);
-            border: 1px solid var(--line-color); color: white; width: 36px; height: 36px;
-            border-radius: 50%; cursor: pointer; z-index: 10; font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .close-btn:hover { background: var(--gold); color: black; }
 
-        #sync-progress { display: none; width: 100%; height: 4px; background: var(--surface-color); position: fixed; top: 0; left: 0; z-index: 200; }
-        #sync-bar { width: 0%; height: 100%; background: var(--gold); transition: width 0.2s; }
-        
-        footer { text-align: center; padding: 40px 24px; color: var(--text-sec); font-size: 0.85rem; border-top: 1px solid var(--line-color); margin-top: 40px; }
+        .modal-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 32px;
+            padding: 40px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .modal-poster {
+            flex-shrink: 0;
+            width: 280px;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            aspect-ratio: 2/3;
+            object-fit: cover;
+        }
+
+        .modal-info {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-title {
+            font-size: 2.5rem;
+            color: var(--gold);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .modal-meta {
+            color: var(--text-sec);
+            font-size: 0.95rem;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-meta span::after {
+            content: "·";
+            margin-left: 8px;
+        }
+
+        .modal-meta span:last-child::after {
+            content: "";
+        }
+
+        .modal-synopsis {
+            margin-top: 12px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .modal-credits {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: var(--text-sec);
+            line-height: 1.5;
+        }
+
+        .modal-credits strong {
+            color: var(--text-main);
+        }
+
+        .stream-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .stream-tag {
+            background: rgba(209, 169, 84, 0.1);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .stream-none {
+            color: var(--text-sec);
+            border: 1px solid var(--line-color);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .modal-actions {
+            margin-top: auto;
+            padding-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--line-color);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: var(--gold);
+            color: black;
+        }
+
+        #sync-progress {
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: var(--surface-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 200;
+        }
+
+        #sync-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--gold);
+            transition: width 0.2s;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--text-sec);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--line-color);
+            margin-top: 40px;
+        }
 
         @media (max-width: 768px) {
-            body { padding-top: 320px; }
-            .modal-inner { flex-direction: column; align-items: center; padding: 24px; }
-            .modal-info { text-align: center; align-items: center; }
-            .modal-meta { justify-content: center; }
-            .modal-poster { width: 200px; }
-            .modal-actions { justify-content: center; }
+            body {
+                padding-top: 320px;
+            }
+
+            .modal-inner {
+                flex-direction: column;
+                align-items: center;
+                padding: 24px;
+            }
+
+            .modal-info {
+                text-align: center;
+                align-items: center;
+            }
+
+            .modal-meta {
+                justify-content: center;
+            }
+
+            .modal-poster {
+                width: 200px;
+            }
+
+            .modal-actions {
+                justify-content: center;
+            }
         }
+
         @media (prefers-reduced-motion) {
-            .poster-wrapper, .poster-overlay { transition: none; }
-            .movie-card:hover .poster-wrapper, .movie-card:focus-visible .poster-wrapper { transform: none; box-shadow: 0 0 0 2px var(--gold); }
+
+            .poster-wrapper,
+            .poster-overlay {
+                transition: none;
+            }
+
+            .movie-card:hover .poster-wrapper,
+            .movie-card:focus-visible .poster-wrapper {
+                transform: none;
+                box-shadow: 0 0 0 2px var(--gold);
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <div id="sync-progress"><div id="sync-bar"></div></div>
+    <div id="sync-progress">
+        <div id="sync-bar"></div>
+    </div>
 
     <header>
         <div class="header-top">
             <h1 class="serif">Biblioteca</h1>
             <div class="controls">
                 <input type="text" id="search-input" placeholder="Buscar título..." onkeyup="handleSearch(event)">
-                <input type="password" id="api-key" placeholder="Chave API TMDB" title="Cole a chave v3 ou o Read Access Token">
+                <input type="password" id="api-key" placeholder="Chave API TMDB"
+                    title="Cole a chave v3 ou o Read Access Token">
                 <button onclick="saveKey()">Salvar Chave</button>
                 <button onclick="syncStreamings()">Sincronizar streamings</button>
                 <button onclick="clearCache()">Limpar dados</button>
                 <button class="primary" onclick="sortearFilme()">Sortear um filme</button>
-                <input type="file" id="csv-file" accept=".csv" onchange="handleFileUpload(event)" style="display: none;">
-                <button id="btn-upload" onclick="document.getElementById('csv-file').click()" style="display: none;">Carregar CSV manualmente</button>
+                <input type="file" id="csv-file" accept=".csv" onchange="handleFileUpload(event)"
+                    style="display: none;">
+                <button id="btn-upload" onclick="document.getElementById('csv-file').click()"
+                    style="display: none;">Carregar CSV manualmente</button>
             </div>
             <div id="sync-status" style="font-size: 0.8rem; color: var(--text-sec);"></div>
         </div>
@@ -181,7 +572,8 @@
     <main id="library"></main>
 
     <footer>
-        Dados de filmes e séries: TMDB. Disponibilidade nos streamings: JustWatch (via TMDB). Este site não é afiliado nem endossado por eles.
+        Dados de filmes e séries: TMDB. Disponibilidade nos streamings: JustWatch (via TMDB). Este site não é afiliado
+        nem endossado por eles.
     </footer>
 
     <dialog id="movie-modal">
@@ -234,7 +626,7 @@
                 } else {
                     document.getElementById('btn-upload').style.display = 'inline-block';
                 }
-            } catch(e) {
+            } catch (e) {
                 document.getElementById('btn-upload').style.display = 'inline-block';
             }
         }
@@ -250,7 +642,7 @@
         function processCSV(text) {
             const rows = []; let row = []; let inQ = false; let val = '';
             for (let i = 0; i < text.length; i++) {
-                let c = text[i], n = text[i+1];
+                let c = text[i], n = text[i + 1];
                 if (c === '"' && inQ && n === '"') { val += '"'; i++; }
                 else if (c === '"') { inQ = !inQ; }
                 else if (c === ',' && !inQ) { row.push(val); val = ''; }
@@ -258,7 +650,7 @@
                 else if (c !== '\r') { val += c; }
             }
             if (val || row.length) { row.push(val); rows.push(row); }
-            
+
             const headers = rows[0].map(h => h.trim());
             const nameIdx = headers.indexOf('Name');
             const yearIdx = headers.indexOf('Year');
@@ -266,8 +658,8 @@
 
             movies = rows.slice(1).filter(r => r[nameIdx]).map(r => {
                 const year = r[yearIdx] ? parseInt(r[yearIdx]) : null;
-                const decade = year ? `${Math.floor(year/10)*10}s` : 'Sem ano';
-                return { Name: r[nameIdx], Year: year, URI: r[uriIdx], Decade: decade, key: `${r[nameIdx]}-${year||''}` };
+                const decade = year ? `${Math.floor(year / 10) * 10}s` : 'Sem ano';
+                return { Name: r[nameIdx], Year: year, URI: r[uriIdx], Decade: decade, key: `${r[nameIdx]}-${year || ''}` };
             });
             updateView();
         }
@@ -317,8 +709,8 @@
         }
 
         function renderFilters() {
-            let counts = { type: { 'Filmes':0, 'Séries':0 }, decade: {}, streaming: { 'Paramount+': 0 } };
-            
+            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0 } };
+
             movies.forEach(m => {
                 const c = cache[m.key] || {};
                 const mType = c.type === 'tv' ? 'Séries' : 'Filmes';
@@ -333,7 +725,7 @@
 
             const fContainer = document.getElementById('filters');
             fContainer.innerHTML = '';
-            
+
             const buildRow = (cat, items, sortFn) => {
                 const row = document.createElement('div');
                 row.className = 'filter-row';
@@ -346,15 +738,15 @@
                     chip.onclick = () => toggleFilter(cat, k);
                     row.appendChild(chip);
                 });
-                if(row.children.length > 0) fContainer.appendChild(row);
+                if (row.children.length > 0) fContainer.appendChild(row);
             };
 
-            buildRow('type', Object.keys(counts.type), (a,b) => a.localeCompare(b));
-            buildRow('decade', Object.keys(counts.decade), (a,b) => {
+            buildRow('type', Object.keys(counts.type), (a, b) => a.localeCompare(b));
+            buildRow('decade', Object.keys(counts.decade), (a, b) => {
                 if (a === 'Sem ano') return 1; if (b === 'Sem ano') return -1;
                 return parseInt(b) - parseInt(a);
             });
-            buildRow('streaming', Object.keys(counts.streaming), (a,b) => counts.streaming[b] - counts.streaming[a]);
+            buildRow('streaming', Object.keys(counts.streaming), (a, b) => counts.streaming[b] - counts.streaming[a]);
         }
 
         function renderGrid() {
@@ -369,34 +761,34 @@
             main.innerHTML = '';
 
             const byDec = {};
-            filtered.forEach(m => { if(!byDec[m.Decade]) byDec[m.Decade] = []; byDec[m.Decade].push(m); });
-            
-            const decKeys = Object.keys(byDec).sort((a,b) => (a === 'Sem ano' ? 1 : (b === 'Sem ano' ? -1 : parseInt(b) - parseInt(a))));
+            filtered.forEach(m => { if (!byDec[m.Decade]) byDec[m.Decade] = []; byDec[m.Decade].push(m); });
+
+            const decKeys = Object.keys(byDec).sort((a, b) => (a === 'Sem ano' ? 1 : (b === 'Sem ano' ? -1 : parseInt(b) - parseInt(a))));
 
             decKeys.forEach(dec => {
-                byDec[dec].sort((a,b) => (a.Year || 0) - (b.Year || 0) || a.Name.localeCompare(b.Name));
-                
+                byDec[dec].sort((a, b) => (a.Year || 0) - (b.Year || 0) || a.Name.localeCompare(b.Name));
+
                 let sec = document.createElement('section');
                 sec.className = 'decade-section';
                 sec.innerHTML = `<h2 class="decade-title">${dec} <span class="decade-count">${byDec[dec].length} títulos</span></h2>
                                  <div class="shelf" id="shelf-${dec}"></div>`;
                 main.appendChild(sec);
-                
+
                 const shelf = sec.querySelector('.shelf');
                 byDec[dec].forEach(m => {
                     const c = cache[m.key] || {};
-                    let posterHtml = c.poster_path 
+                    let posterHtml = c.poster_path
                         ? `<img src="https://image.tmdb.org/t/p/w342${c.poster_path}" class="poster-img" loading="lazy" alt="${esc(m.Name)}">`
                         : `<div class="no-poster">${esc(m.Name)}</div>`;
-                    
-                    let streamHtml = (c.providers || []).slice(0,2).join(', ');
+
+                    let streamHtml = (c.providers || []).slice(0, 2).join(', ');
                     if (c.providers && c.providers.length > 2) streamHtml += '...';
 
                     let card = document.createElement('div');
                     card.className = 'movie-card';
                     card.tabIndex = 0;
                     card.onclick = () => openModal(m.key);
-                    card.onkeydown = (e) => { if(e.key === 'Enter') openModal(m.key); };
+                    card.onkeydown = (e) => { if (e.key === 'Enter') openModal(m.key); };
                     card.innerHTML = `
                         <div class="poster-wrapper">
                             ${posterHtml}
@@ -422,29 +814,29 @@
             if (c.id && !c.creditsFetched) {
                 try {
                     let res = await fetch(`${TMDB_BASE}/${c.type}/${c.id}?${getQuery()}append_to_response=credits&language=pt-BR`, { headers: getHeaders() });
-                    if(res.ok) {
+                    if (res.ok) {
                         let d = await res.json();
-                        c.runtime = d.runtime; c.genres = (d.genres||[]).map(g=>g.name);
+                        c.runtime = d.runtime; c.genres = (d.genres || []).map(g => g.name);
                         c.seasons = d.number_of_seasons; c.synopsis = d.overview; c.backdrop = d.backdrop_path;
                         let crew = d.credits?.crew || [];
-                        c.director = c.type === 'movie' ? crew.find(x=>x.job==='Director')?.name : (d.created_by||[]).map(x=>x.name).join(', ');
-                        c.cast = (d.credits?.cast||[]).slice(0,6).map(x=>x.name);
+                        c.director = c.type === 'movie' ? crew.find(x => x.job === 'Director')?.name : (d.created_by || []).map(x => x.name).join(', ');
+                        c.cast = (d.credits?.cast || []).slice(0, 6).map(x => x.name);
                         c.creditsFetched = true;
                         localStorage.setItem('tmdbCache', JSON.stringify(cache));
                         renderModalContent(m, c);
                     }
-                } catch(e) { console.error(e); }
+                } catch (e) { console.error(e); }
             }
         }
 
         function renderModalContent(m, c) {
             let bgHtml = c.backdrop ? `<div class="modal-bg" style="background-image: url(https://image.tmdb.org/t/p/w1280${c.backdrop})"></div>` : '';
             let posterSrc = c.poster_path ? `https://image.tmdb.org/t/p/w500${c.poster_path}` : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            
+
             let meta = [];
             if (m.Year) meta.push(`<span>${m.Year}</span>`);
-            if (c.runtime) meta.push(`<span>${Math.floor(c.runtime/60)}h ${c.runtime%60}min</span>`);
-            if (c.seasons) meta.push(`<span>${c.seasons} temporada${c.seasons>1?'s':''}</span>`);
+            if (c.runtime) meta.push(`<span>${Math.floor(c.runtime / 60)}h ${c.runtime % 60}min</span>`);
+            if (c.seasons) meta.push(`<span>${c.seasons} temporada${c.seasons > 1 ? 's' : ''}</span>`);
             if (c.genres && c.genres.length) meta.push(`<span>${esc(c.genres.join(', '))}</span>`);
 
             let streams = (c.providers && c.providers.length > 0)
@@ -485,7 +877,7 @@
         }
 
         function clearCache() {
-            if(confirm('Apagar dados de streamings e recarregar?')) {
+            if (confirm('Apagar dados de streamings e recarregar?')) {
                 localStorage.removeItem('tmdbCache'); cache = {}; updateView();
             }
         }
@@ -495,9 +887,9 @@
             if (!tmdbKey) return alert('Insira a chave do TMDB.');
             const status = document.getElementById('sync-status');
             try {
-                let r = await fetch(`${TMDB_BASE}/configuration?${getQuery().replace('&','')}`, { headers: getHeaders() });
-                if(!r.ok) throw new Error('Chave recusada');
-            } catch(e) { return alert('Erro na chave do TMDB. Verifique e tente novamente.'); }
+                let r = await fetch(`${TMDB_BASE}/configuration?${getQuery().replace('&', '')}`, { headers: getHeaders() });
+                if (!r.ok) throw new Error('Chave recusada');
+            } catch (e) { return alert('Erro na chave do TMDB. Verifique e tente novamente.'); }
 
             const now = Date.now();
             const queue = movies.filter(m => {
@@ -518,13 +910,13 @@
                     updateView();
                     return;
                 }
-                while(active < limit && queue.length > 0) {
+                while (active < limit && queue.length > 0) {
                     let m = queue.shift();
                     active++;
                     processMovie(m).then(success => {
-                        if(!success) fails++;
+                        if (!success) fails++;
                         done++; active--;
-                        document.getElementById('sync-bar').style.width = `${(done / (done + queue.length + active))*100}%`;
+                        document.getElementById('sync-bar').style.width = `${(done / (done + queue.length + active)) * 100}%`;
                         status.innerText = `Sincronizando... ${done}`;
                         next();
                     });
@@ -576,10 +968,11 @@
 
                 cache[m.key] = { id: item.id, type, poster_path: poster, orig_lang: origLang, providers, last_sync: Date.now() };
                 return true;
-            } catch(e) { return false; }
+            } catch (e) { return false; }
         }
 
         window.onload = loadCSV;
     </script>
 </body>
+
 </html>
