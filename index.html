@@ -889,9 +889,49 @@
     <script>
         const TMDB_BASE = 'https://api.themoviedb.org/3';
         const RULES = {
-            exclude: ['Looke', 'MUBI', 'Oldflix', 'Belas Artes à la carte', 'Claro tv+'],
-            excludeSuffix: 'Amazon Channel',
-            rename: { 'Paramount Plus': 'Paramount+' }
+            exclude: [
+                'Looke',
+                'MUBI',
+                'Oldflix',
+                'Belas Artes à la carte',
+                'Belas Artes A La Carte',
+                'Belas à la carte',
+                'Belas a la carte',
+                'Filmicca',
+                'FILMICCA',
+                'Paramount Plus Premium',
+                'Paramount+ Premium',
+                'Artiflix',
+                'ARTIFLIX',
+                'Claro video',
+                'Claro Video',
+                'Claro tv+',
+                'Adrenalina Pura Amazon Channel',
+                'Adrenalina Pura Apple TV Channel',
+                'DocAlliance Films',
+                'DocAlliance',
+                'Bloodstream',
+                'Cultpix',
+                'Artfify',
+                'Artify',
+                'Crunchyroll',
+                'Crunchyrool',
+                'Univer Video',
+                'Gospel Play',
+                'Sun Nxt',
+                'Sun NXT',
+                'Amazon Video',
+                'Paramount Plus Apple TV Channel',
+                'Kocowa',
+                'KOCOWA+'
+            ],
+            excludeSuffixes: [
+                'Amazon Channel',
+                'Apple TV Channel'
+            ],
+            rename: {
+                'Paramount Plus': 'Paramount+'
+            }
         };
 
         let tmdbKey = localStorage.getItem('tmdbKey') || '';
@@ -970,14 +1010,68 @@
         }
 
         function cleanProvider(name) {
-            let clean = name.replace(/ (with Ads|Standard with Ads)$/i, '');
+            if (!name) return '';
+            let clean = name.trim().replace(/ (with Ads|Standard with Ads)$/i, '');
             if (RULES.rename[clean]) clean = RULES.rename[clean];
+            if (clean.toLowerCase() === 'mercado play') clean = 'Mercado Play';
             return clean;
         }
+
         function isValidProvider(name) {
-            if (name.endsWith(RULES.excludeSuffix)) return false;
-            return !RULES.exclude.includes(name);
+            if (!name) return false;
+            const norm = name.trim().toLowerCase();
+
+            // Excluir qualquer canal Amazon Channel ou Apple TV Channel (case-insensitive)
+            for (const suffix of RULES.excludeSuffixes) {
+                if (norm.endsWith(suffix.toLowerCase())) return false;
+            }
+
+            // Exclusão específica para Amazon Video (mantém Amazon Prime Video / Prime Video)
+            if (norm === 'amazon video') return false;
+
+            // Exclusão para Belas à la carte (variações com/sem acento e termos)
+            if (norm.includes('belas') && (norm.includes('carte') || norm.includes('artes'))) return false;
+
+            // Exclusão para Paramount Premium (mantém Paramount+)
+            if (norm.includes('paramount') && norm.includes('premium')) return false;
+
+            // Exclusão para Claro video / Claro tv+
+            if (norm.startsWith('claro')) return false;
+
+            // Exclusão para Crunchyroll / Crunchyrool
+            if (norm.startsWith('crunchyro')) return false;
+
+            // Exclusão para Artiflix / Artfify / Artify
+            if (norm === 'artiflix' || norm === 'artfify' || norm === 'artify') return false;
+
+            // Verificar lista de exclusão geral (case-insensitive)
+            return !RULES.exclude.some(ex => ex.toLowerCase() === norm);
         }
+
+        function getValidProviders(providers) {
+            if (!providers || !Array.isArray(providers)) return [];
+            return [...new Set(providers.map(cleanProvider).filter(isValidProvider))];
+        }
+
+        function sanitizeCache() {
+            let changed = false;
+            for (const key in cache) {
+                if (cache[key] && Array.isArray(cache[key].providers)) {
+                    const original = cache[key].providers;
+                    const cleaned = getValidProviders(original);
+                    if (cleaned.length !== original.length || cleaned.some((v, i) => v !== original[i])) {
+                        cache[key].providers = cleaned;
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                try {
+                    localStorage.setItem('tmdbCache', JSON.stringify(cache));
+                } catch (e) {}
+            }
+        }
+        sanitizeCache();
 
         // View logic
         function updateView() {
@@ -1008,7 +1102,7 @@
                 if (!activeFilters.decade.includes(m.Decade)) return false;
             }
             if (excludeCategory !== 'streaming' && activeFilters.streaming.length > 0) {
-                const mStreams = c.providers || [];
+                const mStreams = getValidProviders(c.providers);
                 if (!activeFilters.streaming.some(s => mStreams.includes(s))) return false;
             }
             return true;
@@ -1073,7 +1167,7 @@
         window.addEventListener('resize', updateHeaderHeight);
 
         function renderFilters() {
-            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0 } };
+            let counts = { type: { 'Filmes': 0, 'Séries': 0 }, decade: {}, streaming: { 'Paramount+': 0, 'Mercado Play': 0 } };
 
             movies.forEach(m => {
                 const c = cache[m.key] || {};
@@ -1083,7 +1177,7 @@
                 if (matchExcluding(m, c, 'type')) counts.type[mType] = (counts.type[mType] || 0) + 1;
                 if (matchExcluding(m, c, 'decade')) counts.decade[m.Decade] = (counts.decade[m.Decade] || 0) + 1;
                 if (matchExcluding(m, c, 'streaming')) {
-                    (c.providers || []).forEach(s => counts.streaming[s] = (counts.streaming[s] || 0) + 1);
+                    getValidProviders(c.providers).forEach(s => counts.streaming[s] = (counts.streaming[s] || 0) + 1);
                 }
             });
 
@@ -1093,7 +1187,7 @@
 
             const buildSection = (cat, title, items, sortFn) => {
                 const sortedItems = items.sort(sortFn);
-                const validItems = sortedItems.filter(k => (counts[cat][k] || 0) > 0 || k === 'Paramount+');
+                const validItems = sortedItems.filter(k => (counts[cat][k] || 0) > 0 || k === 'Paramount+' || k === 'Mercado Play');
                 if (validItems.length === 0) return;
 
                 const sec = document.createElement('div');
@@ -1202,8 +1296,9 @@
                         ? `<img src="https://image.tmdb.org/t/p/w342${c.poster_path}" class="poster-img" loading="lazy" alt="${esc(m.Name)}">`
                         : `<div class="no-poster">${esc(m.Name)}</div>`;
 
-                    let streamHtml = (c.providers || []).slice(0, 2).join(', ');
-                    if (c.providers && c.providers.length > 2) streamHtml += '...';
+                    const validProviders = getValidProviders(c.providers);
+                    let streamHtml = validProviders.slice(0, 2).join(', ');
+                    if (validProviders.length > 2) streamHtml += '...';
 
                     let card = document.createElement('div');
                     card.className = 'movie-card';
@@ -1261,8 +1356,9 @@
             if (c.seasons) meta.push(`<span>${c.seasons} temporada${c.seasons > 1 ? 's' : ''}</span>`);
             if (c.genres && c.genres.length) meta.push(`<span>${esc(c.genres.join(', '))}</span>`);
 
-            let streams = (c.providers && c.providers.length > 0)
-                ? c.providers.map(s => `<span class="stream-tag">${esc(s)}</span>`).join('')
+            const validProviders = getValidProviders(c.providers);
+            let streams = (validProviders.length > 0)
+                ? validProviders.map(s => `<span class="stream-tag">${esc(s)}</span>`).join('')
                 : `<span class="stream-none">Fora dos streamings por assinatura no Brasil</span>`;
 
             document.getElementById('modal-content').innerHTML = `
@@ -1376,10 +1472,26 @@
 
                 let providers = [];
                 let br = details['watch/providers']?.results?.BR;
-                if (br && br.flatrate) {
-                    br.flatrate.forEach(p => {
-                        if (isValidProvider(p.provider_name)) providers.push(cleanProvider(p.provider_name));
-                    });
+                if (br) {
+                    const checkList = (list, isAdOrFree) => {
+                        if (!list || !Array.isArray(list)) return;
+                        list.forEach(p => {
+                            if (!p || !p.provider_name) return;
+                            const clean = cleanProvider(p.provider_name);
+                            if (isAdOrFree) {
+                                // Aceita Mercado Play (e outros serviços livres desejados) caso venha em ads ou free
+                                if (clean.toLowerCase() === 'mercado play' && isValidProvider(clean)) {
+                                    providers.push('Mercado Play');
+                                }
+                            } else {
+                                if (isValidProvider(clean)) providers.push(clean);
+                            }
+                        });
+                    };
+
+                    checkList(br.flatrate, false);
+                    checkList(br.ads, true);
+                    checkList(br.free, true);
                 }
                 providers = [...new Set(providers)];
 
