@@ -924,7 +924,10 @@
                 'Paramount Plus Apple TV Channel',
                 'Kocowa',
                 'KOCOWA+',
-                'Mercado Play'
+                'Mercado Play',
+                'Reserva Imovision',
+                'Reserva Imovisión',
+                'Imovision'
             ],
             excludeSuffixes: [
                 'Amazon Channel',
@@ -1031,6 +1034,9 @@
 
             // Exclusão específica para Mercado Play
             if (norm === 'mercado play') return false;
+
+            // Exclusão para Reserva Imovision
+            if (norm.includes('imovision') || norm.includes('imovisión')) return false;
 
             // Exclusão específica para Amazon Video (mantém Amazon Prime Video / Prime Video)
             if (norm === 'amazon video') return false;
